@@ -1,8 +1,6 @@
 export const ROLE_OPTIONS = [
-  { value: 'Developer', label: 'Developer' },
-  { value: 'Designer', label: 'Designer' },
-  { value: 'Manager', label: 'Manager' },
-  { value: 'QA', label: 'QA' },
-  { value: 'DevOps', label: 'DevOps' },
-  { value: 'Product Owner', label: 'Product Owner' }
+  { value: 'Quản trị viên', label: 'Quản trị viên' },
+  { value: 'Bán hàng', label: 'Bán hàng' },
+  { value: 'Chăm sóc khách hàng', label: 'Chăm sóc khách hàng' },
+  { value: 'Kế toán', label: 'Kế toán' }
 ];

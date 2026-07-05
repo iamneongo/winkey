@@ -1,6 +1,5 @@
 export const categoryOptions = [
-  { value: 'beauty', label: 'Beauty Products' },
-  { value: 'electronics', label: 'Electronics' },
-  { value: 'home', label: 'Home & Garden' },
-  { value: 'sports', label: 'Sports & Outdoors' }
+  { value: 'windows', label: 'Windows' },
+  { value: 'office', label: 'Microsoft Office' },
+  { value: 'combo', label: 'Combo ưu đãi' }
 ];

@@ -15,8 +15,10 @@
 // Current: Mock (in-memory fake data for demo/prototyping)
 // ============================================================
 
-import { fakeUsers } from '@/constants/mock-api-users';
 import { NextRequest, NextResponse } from 'next/server';
+import { createUserInDb, getUsersFromDb } from '@/lib/catalog';
+
+export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -27,7 +29,7 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search') ?? undefined;
   const sort = searchParams.get('sort') ?? undefined;
 
-  const data = await fakeUsers.getUsers({
+  const data = await getUsersFromDb({
     page,
     limit,
     roles,
@@ -40,6 +42,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const data = await fakeUsers.createUser(body);
+  const data = await createUserInDb(body);
   return NextResponse.json(data, { status: 201 });
 }

@@ -27,7 +27,7 @@
 // Current: Mock (in-memory fake data for demo/prototyping)
 // ============================================================
 
-import { fakeProducts } from '@/constants/mock-api';
+import { apiClient } from '@/lib/api-client';
 import type {
   ProductFilters,
   ProductsResponse,
@@ -36,21 +36,38 @@ import type {
 } from './types';
 
 export async function getProducts(filters: ProductFilters): Promise<ProductsResponse> {
-  return fakeProducts.getProducts(filters);
+  const query = new URLSearchParams();
+
+  if (filters.page) query.set('page', String(filters.page));
+  if (filters.limit) query.set('limit', String(filters.limit));
+  if (filters.categories) query.set('categories', filters.categories);
+  if (filters.search) query.set('search', filters.search);
+  if (filters.sort) query.set('sort', filters.sort);
+
+  const suffix = query.toString() ? `?${query.toString()}` : '';
+  return apiClient<ProductsResponse>(`/products${suffix}`);
 }
 
 export async function getProductById(id: number): Promise<ProductByIdResponse> {
-  return fakeProducts.getProductById(id) as Promise<ProductByIdResponse>;
+  return apiClient<ProductByIdResponse>(`/products/${id}`);
 }
 
 export async function createProduct(data: ProductMutationPayload) {
-  return fakeProducts.createProduct(data);
+  return apiClient('/products', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
 }
 
 export async function updateProduct(id: number, data: ProductMutationPayload) {
-  return fakeProducts.updateProduct(id, data);
+  return apiClient(`/products/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
 }
 
 export async function deleteProduct(id: number) {
-  return fakeProducts.deleteProduct(id);
+  return apiClient(`/products/${id}`, {
+    method: 'DELETE'
+  });
 }

@@ -15,8 +15,10 @@
 // Current: Mock (in-memory fake data for demo/prototyping)
 // ============================================================
 
-import { fakeProducts } from '@/constants/mock-api';
 import { NextRequest, NextResponse } from 'next/server';
+import { createProductInDb, getProductsFromDb } from '@/lib/catalog';
+
+export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -27,7 +29,7 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search') ?? undefined;
   const sort = searchParams.get('sort') ?? undefined;
 
-  const data = await fakeProducts.getProducts({
+  const data = await getProductsFromDb({
     page,
     limit,
     categories,
@@ -40,6 +42,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const data = await fakeProducts.createProduct(body);
+  const data = await createProductInDb(body);
   return NextResponse.json(data, { status: 201 });
 }

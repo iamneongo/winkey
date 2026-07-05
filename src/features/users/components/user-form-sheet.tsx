@@ -21,9 +21,9 @@ import { userSchema, type UserFormValues } from '../schemas/user';
 import { ROLE_OPTIONS } from './users-table/options';
 
 const STATUS_OPTIONS = [
-  { value: 'Active', label: 'Active' },
-  { value: 'Inactive', label: 'Inactive' },
-  { value: 'Invited', label: 'Invited' }
+  { value: 'Đang hoạt động', label: 'Đang hoạt động' },
+  { value: 'Tạm khóa', label: 'Tạm khóa' },
+  { value: 'Đã mời', label: 'Đã mời' }
 ];
 
 interface UserFormSheetProps {
@@ -38,20 +38,20 @@ export function UserFormSheet({ user, open, onOpenChange }: UserFormSheetProps) 
   const createMutation = useMutation({
     ...createUserMutation,
     onSuccess: () => {
-      toast.success('User created successfully');
+      toast.success('Đã thêm thành viên mới.');
       onOpenChange(false);
       form.reset();
     },
-    onError: () => toast.error('Failed to create user')
+    onError: () => toast.error('Không thể thêm thành viên.')
   });
 
   const updateMutation = useMutation({
     ...updateUserMutation,
     onSuccess: () => {
-      toast.success('User updated successfully');
+      toast.success('Đã cập nhật thông tin thành viên.');
       onOpenChange(false);
     },
-    onError: () => toast.error('Failed to update user')
+    onError: () => toast.error('Không thể cập nhật thành viên.')
   });
 
   const form = useAppForm({
@@ -61,7 +61,7 @@ export function UserFormSheet({ user, open, onOpenChange }: UserFormSheetProps) 
       email: user?.email ?? '',
       phone: user?.phone ?? '',
       role: user?.role ?? '',
-      status: user?.status ?? 'Active'
+      status: user?.status ?? 'Đang hoạt động'
     } as UserFormValues,
     validators: {
       onSubmit: userSchema
@@ -83,11 +83,11 @@ export function UserFormSheet({ user, open, onOpenChange }: UserFormSheetProps) 
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className='flex flex-col'>
         <SheetHeader>
-          <SheetTitle>{isEdit ? 'Edit User' : 'New User'}</SheetTitle>
+          <SheetTitle>{isEdit ? 'Cập nhật thành viên' : 'Thêm thành viên'}</SheetTitle>
           <SheetDescription>
             {isEdit
-              ? 'Update the user details below.'
-              : 'Fill in the details to create a new user.'}
+              ? 'Chỉnh lại thông tin cần hiển thị trong hệ thống quản trị.'
+              : 'Điền thông tin cơ bản để tạo tài khoản quản trị mới.'}
           </SheetDescription>
         </SheetHeader>
 
@@ -97,20 +97,20 @@ export function UserFormSheet({ user, open, onOpenChange }: UserFormSheetProps) 
               <div className='grid grid-cols-2 gap-4'>
                 <FormTextField
                   name='first_name'
-                  label='First Name'
+                  label='Tên'
                   required
-                  placeholder='John'
+                  placeholder='Minh'
                   validators={{
-                    onBlur: z.string().min(2, 'First name must be at least 2 characters')
+                    onBlur: z.string().min(2, 'Tên cần ít nhất 2 ký tự.')
                   }}
                 />
                 <FormTextField
                   name='last_name'
-                  label='Last Name'
+                  label='Họ'
                   required
-                  placeholder='Doe'
+                  placeholder='Anh'
                   validators={{
-                    onBlur: z.string().min(2, 'Last name must be at least 2 characters')
+                    onBlur: z.string().min(2, 'Họ cần ít nhất 2 ký tự.')
                   }}
                 />
               </div>
@@ -120,42 +120,42 @@ export function UserFormSheet({ user, open, onOpenChange }: UserFormSheetProps) 
                 label='Email'
                 required
                 type='email'
-                placeholder='john@example.com'
+                placeholder='tenban@winkey.vn'
                 validators={{
-                  onBlur: z.string().email('Please enter a valid email')
+                  onBlur: z.string().email('Email chưa đúng định dạng.')
                 }}
               />
 
               <FormTextField
                 name='phone'
-                label='Phone'
+                label='Số điện thoại'
                 required
                 type='tel'
-                placeholder='(555) 123-4567'
+                placeholder='0901 234 567'
                 validators={{
-                  onBlur: z.string().min(1, 'Phone number is required')
+                  onBlur: z.string().min(1, 'Hãy nhập số điện thoại.')
                 }}
               />
 
               <FormSelectField
                 name='role'
-                label='Role'
+                label='Vai trò'
                 required
                 options={ROLE_OPTIONS}
-                placeholder='Select role'
+                placeholder='Chọn vai trò'
                 validators={{
-                  onBlur: z.string().min(1, 'Please select a role')
+                  onBlur: z.string().min(1, 'Hãy chọn vai trò.')
                 }}
               />
 
               <FormSelectField
                 name='status'
-                label='Status'
+                label='Trạng thái'
                 required
                 options={STATUS_OPTIONS}
-                placeholder='Select status'
+                placeholder='Chọn trạng thái'
                 validators={{
-                  onBlur: z.string().min(1, 'Please select a status')
+                  onBlur: z.string().min(1, 'Hãy chọn trạng thái.')
                 }}
               />
             </form.Form>
@@ -164,10 +164,10 @@ export function UserFormSheet({ user, open, onOpenChange }: UserFormSheetProps) 
 
         <SheetFooter>
           <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
-            Cancel
+            Hủy
           </Button>
           <Button type='submit' form='user-form-sheet' isLoading={isPending}>
-            <Icons.check /> {isEdit ? 'Update User' : 'Create User'}
+            <Icons.check /> {isEdit ? 'Lưu thay đổi' : 'Tạo tài khoản'}
           </Button>
         </SheetFooter>
       </SheetContent>
@@ -181,7 +181,7 @@ export function UserFormSheetTrigger() {
   return (
     <>
       <Button onClick={() => setOpen(true)}>
-        <Icons.add className='mr-2 h-4 w-4' /> Add User
+        <Icons.add className='mr-2 h-4 w-4' /> Thêm thành viên
       </Button>
       <UserFormSheet open={open} onOpenChange={setOpen} />
     </>

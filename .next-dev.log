@@ -1,0 +1,49 @@
+
+> fervent-hopper@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.29.224.1:3000
+- Environments: .env.local
+✓ Ready in 2.8s
+
+(node:16412) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+⨯ error: Authentication timed out
+    at async (src\lib\catalog.ts:336:5)
+    at async getProductsFromDb (src\lib\catalog.ts:472:3)
+    at async GET (src\app\api\products\route.ts:32:16)
+  334 |
+  335 |   initPromise = (async () => {
+> 336 |     await db.query(`
+      |     ^
+  337 |       CREATE TABLE IF NOT EXISTS products (
+  338 |         id SERIAL PRIMARY KEY,
+  339 |         slug TEXT NOT NULL UNIQUE, {
+  length: 45,
+  severity: 'ERROR',
+  code: '08P01',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+ GET /api/products 500 in 93s (next.js: 2.8s, application-code: 91s)

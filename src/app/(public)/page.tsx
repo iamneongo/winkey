@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { Hero } from "../components/Hero";
 import { BentoFeatures } from "../components/BentoFeatures";
@@ -8,8 +6,11 @@ import { ProcessSteps } from "../components/ProcessSteps";
 import { Testimonials } from "../components/Testimonials";
 import { FAQ } from "../components/FAQ";
 import { BottomCta } from "../components/BottomCta";
+import { getStorefrontProducts } from "@/lib/catalog";
 
-export default function Home() {
+export default async function Home() {
+  const products = await getStorefrontProducts();
+
   return (
     <>
       {/* Hero Section */}
@@ -19,7 +20,7 @@ export default function Home() {
       <BentoFeatures />
 
       {/* Store Grid Section */}
-      <ProductList />
+      <ProductList products={products} />
 
       {/* Purchasing Process Steps */}
       <ProcessSteps />

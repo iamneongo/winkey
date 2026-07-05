@@ -12,7 +12,7 @@ export const columns: ColumnDef<User>[] = [
     id: 'name',
     accessorFn: (row) => `${row.first_name} ${row.last_name}`,
     header: ({ column }: { column: Column<User, unknown> }) => (
-      <DataTableColumnHeader column={column} title='Name' />
+      <DataTableColumnHeader column={column} title='Thành viên' />
     ),
     cell: ({ row }) => (
       <div className='flex flex-col'>
@@ -23,8 +23,8 @@ export const columns: ColumnDef<User>[] = [
       </div>
     ),
     meta: {
-      label: 'Name',
-      placeholder: 'Search users...',
+      label: 'Thành viên',
+      placeholder: 'Tìm theo tên hoặc email...',
       variant: 'text' as const,
       icon: Icons.text
     },
@@ -32,14 +32,14 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'phone',
-    header: 'PHONE'
+    header: 'ĐIỆN THOẠI'
   },
   {
     id: 'role',
     accessorKey: 'role',
     enableSorting: false,
     header: ({ column }: { column: Column<User, unknown> }) => (
-      <DataTableColumnHeader column={column} title='Role' />
+      <DataTableColumnHeader column={column} title='Vai trò' />
     ),
     cell: ({ cell }) => {
       return (
@@ -50,18 +50,18 @@ export const columns: ColumnDef<User>[] = [
     },
     enableColumnFilter: true,
     meta: {
-      label: 'roles',
+      label: 'Vai trò',
       variant: 'multiSelect' as const,
       options: ROLE_OPTIONS
     }
   },
   {
     accessorKey: 'status',
-    header: 'STATUS',
+    header: 'TRẠNG THÁI',
     cell: ({ cell }) => {
       const status = cell.getValue<User['status']>();
       const variant =
-        status === 'Active' ? 'default' : status === 'Inactive' ? 'secondary' : 'outline';
+        status === 'Đang hoạt động' ? 'default' : status === 'Tạm khóa' ? 'secondary' : 'outline';
       return <Badge variant={variant}>{status}</Badge>;
     }
   },

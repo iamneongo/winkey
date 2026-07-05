@@ -1,4 +1,4 @@
-export type { Product } from '@/constants/mock-api';
+export type { ProductRecord as Product } from '@/lib/catalog';
 
 export type ProductFilters = {
   page?: number;
@@ -15,14 +15,14 @@ export type ProductsResponse = {
   total_products: number;
   offset: number;
   limit: number;
-  products: import('@/constants/mock-api').Product[];
+  products: import('@/lib/catalog').ProductRecord[];
 };
 
 export type ProductByIdResponse = {
   success: boolean;
   time: string;
   message: string;
-  product: import('@/constants/mock-api').Product;
+  product: import('@/lib/catalog').ProductRecord;
 };
 
 export type ProductMutationPayload = {

@@ -1,40 +1,40 @@
 import type { InfobarContent } from '@/components/ui/infobar';
 
 export const usersInfoContent: InfobarContent = {
-  title: 'Users — React Query + nuqs Pattern',
+  title: 'Quản lý thành viên',
   sections: [
     {
-      title: 'Overview',
+      title: 'Tổng quan',
       description:
-        'This page demonstrates client-side data fetching with React Query combined with nuqs URL search params — as an alternative to the Products page which uses server-side RSC fetching. Both patterns use the same DataTable, useDataTable hook, and nuqs URL state.',
+        'Trang này dùng React Query kết hợp nuqs để giữ trạng thái lọc, tìm kiếm và phân trang ngay trên URL. Bảng phản hồi nhanh, tải lại trang vẫn giữ nguyên ngữ cảnh.',
       links: [
         {
-          title: 'TanStack Query SSR Docs',
+          title: 'Tài liệu TanStack Query SSR',
           url: 'https://tanstack.com/query/latest/docs/framework/react/guides/advanced-ssr'
         }
       ]
     },
     {
-      title: 'Server Prefetch + Client Hydration',
+      title: 'Prefetch ở server, dùng tiếp ở client',
       description:
-        'The server component reads search params via searchParamsCache, builds filters, and calls queryClient.prefetchQuery(). The dehydrated state is passed to HydrationBoundary so the client starts with cached data. The client component reads the same search params via useQueryState and calls useSuspenseQuery with matching filters.',
+        'Server nạp sẵn dữ liệu đầu trang rồi truyền xuống client bằng HydrationBoundary. Sau đó client tiếp tục refetch nền để dữ liệu luôn mới mà không làm bảng giật.',
       links: []
     },
     {
-      title: 'URL State with nuqs',
+      title: 'Giữ trạng thái trên URL',
       description:
-        'Pagination, search, and role filters are synced to the URL via nuqs. The useDataTable hook manages the TanStack Table state and debounces filter changes before updating the URL. When the URL changes, React Query automatically refetches because the query key includes the filters.',
+        'Phân trang, tìm kiếm và lọc vai trò đều được đồng bộ lên URL. Bạn có thể chia sẻ đúng màn hình đang xem mà không cần thao tác lại từ đầu.',
       links: [
         {
-          title: 'nuqs Documentation',
+          title: 'Tài liệu nuqs',
           url: 'https://nuqs.47ng.com'
         }
       ]
     },
     {
-      title: 'Products vs Users Pattern',
+      title: 'Liên kết với backend thật',
       description:
-        'Products: searchParams → RSC fetch → pass data as props to client table. Users: searchParams → server prefetch → HydrationBoundary → client useSuspenseQuery. The Users pattern enables background refetching, cache sharing across components, and optimistic mutations.',
+        'Bảng thành viên hiện đọc và ghi trực tiếp vào PostgreSQL qua Route Handler của Next. Điều này giúp admin và các phần giao diện khác cùng dùng một nguồn dữ liệu rõ ràng, ổn định.',
       links: []
     }
   ]

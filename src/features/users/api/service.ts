@@ -27,21 +27,38 @@
 // Current: Mock (in-memory fake data for demo/prototyping)
 // ============================================================
 
-import { fakeUsers } from '@/constants/mock-api-users';
+import { apiClient } from '@/lib/api-client';
 import type { UserFilters, UsersResponse, UserMutationPayload } from './types';
 
 export async function getUsers(filters: UserFilters): Promise<UsersResponse> {
-  return fakeUsers.getUsers(filters);
+  const query = new URLSearchParams();
+
+  if (filters.page) query.set('page', String(filters.page));
+  if (filters.limit) query.set('limit', String(filters.limit));
+  if (filters.roles) query.set('roles', filters.roles);
+  if (filters.search) query.set('search', filters.search);
+  if (filters.sort) query.set('sort', filters.sort);
+
+  const suffix = query.toString() ? `?${query.toString()}` : '';
+  return apiClient<UsersResponse>(`/users${suffix}`);
 }
 
 export async function createUser(data: UserMutationPayload) {
-  return fakeUsers.createUser(data);
+  return apiClient('/users', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
 }
 
 export async function updateUser(id: number, data: UserMutationPayload) {
-  return fakeUsers.updateUser(id, data);
+  return apiClient(`/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
 }
 
 export async function deleteUser(id: number) {
-  return fakeUsers.deleteUser(id);
+  return apiClient(`/users/${id}`, {
+    method: 'DELETE'
+  });
 }

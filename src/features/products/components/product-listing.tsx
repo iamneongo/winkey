@@ -1,10 +1,11 @@
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { getQueryClient } from '@/lib/query-client';
 import { searchParamsCache } from '@/lib/searchparams';
-import { productsQueryOptions } from '../api/queries';
+import { getProductsFromDb } from '@/lib/catalog';
+import { productKeys } from '../api/queries';
 import { ProductTable } from './product-tables';
 
-export default function ProductListingPage() {
+export default async function ProductListingPage() {
   const page = searchParamsCache.get('page');
   const search = searchParamsCache.get('name');
   const pageLimit = searchParamsCache.get('perPage');
@@ -21,7 +22,10 @@ export default function ProductListingPage() {
 
   const queryClient = getQueryClient();
 
-  void queryClient.prefetchQuery(productsQueryOptions(filters));
+  await queryClient.prefetchQuery({
+    queryKey: productKeys.list(filters),
+    queryFn: () => getProductsFromDb(filters)
+  });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
