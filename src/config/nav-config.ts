@@ -39,7 +39,7 @@ export const navGroups: NavGroup[] = [
     items: [
       {
         title: 'Dashboard',
-        url: '/dashboard/overview',
+        url: '/admin/overview',
         icon: 'dashboard',
         isActive: false,
         shortcut: ['d', 'd'],
@@ -47,14 +47,14 @@ export const navGroups: NavGroup[] = [
       },
       {
         title: 'Workspaces',
-        url: '/dashboard/workspaces',
+        url: '/admin/workspaces',
         icon: 'workspace',
         isActive: false,
         items: []
       },
       {
         title: 'Teams',
-        url: '/dashboard/workspaces/team',
+        url: '/admin/workspaces/team',
         icon: 'teams',
         isActive: false,
         items: [],
@@ -62,7 +62,7 @@ export const navGroups: NavGroup[] = [
       },
       {
         title: 'Product',
-        url: '/dashboard/product',
+        url: '/admin/product',
         icon: 'product',
         shortcut: ['p', 'p'],
         isActive: false,
@@ -70,7 +70,7 @@ export const navGroups: NavGroup[] = [
       },
       {
         title: 'Users',
-        url: '/dashboard/users',
+        url: '/admin/users',
         icon: 'teams',
         shortcut: ['u', 'u'],
         isActive: false,
@@ -78,7 +78,7 @@ export const navGroups: NavGroup[] = [
       },
       {
         title: 'Kanban',
-        url: '/dashboard/kanban',
+        url: '/admin/kanban',
         icon: 'kanban',
         shortcut: ['k', 'k'],
         isActive: false,
@@ -86,7 +86,7 @@ export const navGroups: NavGroup[] = [
       },
       {
         title: 'Chat',
-        url: '/dashboard/chat',
+        url: '/admin/chat',
         icon: 'chat',
         shortcut: ['c', 'c'],
         isActive: false,
@@ -105,37 +105,37 @@ export const navGroups: NavGroup[] = [
         items: [
           {
             title: 'Basic Form',
-            url: '/dashboard/forms/basic',
+            url: '/admin/forms/basic',
             icon: 'forms',
             shortcut: ['f', 'f']
           },
           {
             title: 'Multi-Step Form',
-            url: '/dashboard/forms/multi-step',
+            url: '/admin/forms/multi-step',
             icon: 'forms'
           },
           {
             title: 'Sheet & Dialog',
-            url: '/dashboard/forms/sheet-form',
+            url: '/admin/forms/sheet-form',
             icon: 'forms'
           },
           {
             title: 'Advanced Patterns',
-            url: '/dashboard/forms/advanced',
+            url: '/admin/forms/advanced',
             icon: 'forms'
           }
         ]
       },
       {
         title: 'React Query',
-        url: '/dashboard/react-query',
+        url: '/admin/react-query',
         icon: 'code',
         isActive: false,
         items: []
       },
       {
         title: 'Icons',
-        url: '/dashboard/elements/icons',
+        url: '/admin/elements/icons',
         icon: 'palette',
         isActive: false,
         items: []
@@ -153,7 +153,7 @@ export const navGroups: NavGroup[] = [
         items: [
           {
             title: 'Exclusive',
-            url: '/dashboard/exclusive',
+            url: '/admin/exclusive',
             icon: 'exclusive',
             shortcut: ['e', 'e']
           }
@@ -167,19 +167,19 @@ export const navGroups: NavGroup[] = [
         items: [
           {
             title: 'Profile',
-            url: '/dashboard/profile',
+            url: '/admin/profile',
             icon: 'profile',
             shortcut: ['m', 'm']
           },
           {
             title: 'Notifications',
-            url: '/dashboard/notifications',
+            url: '/admin/notifications',
             icon: 'notification',
             shortcut: ['n', 'n']
           },
           {
             title: 'Billing',
-            url: '/dashboard/billing',
+            url: '/admin/billing',
             icon: 'billing',
             shortcut: ['b', 'b'],
             access: { requireOrg: true }

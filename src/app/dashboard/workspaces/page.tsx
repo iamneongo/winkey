@@ -20,8 +20,8 @@ export default function WorkspacesPage() {
             organizationPreviewSecondaryIdentifier: 'text-sm text-muted-foreground'
           }
         }}
-        afterSelectOrganizationUrl='/dashboard/workspaces/team'
-        afterCreateOrganizationUrl='/dashboard/workspaces/team'
+        afterSelectOrganizationUrl='/admin/workspaces/team'
+        afterCreateOrganizationUrl='/admin/workspaces/team'
       />
     </PageContainer>
   );

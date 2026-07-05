@@ -103,7 +103,7 @@ export const SignIn = (props: any) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/dashboard");
+    router.push("/admin");
   };
 
   return (

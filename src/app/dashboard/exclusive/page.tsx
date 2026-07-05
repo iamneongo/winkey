@@ -25,7 +25,7 @@ export default function ExclusivePage() {
                   <span className='font-semibold'>Pro</span> plan.
                   <br />
                   Upgrade your subscription in&nbsp;
-                  <Link className='underline' href='/dashboard/billing'>
+                  <Link className='underline' href='/admin/billing'>
                     Billing &amp; Plans
                   </Link>
                   .
