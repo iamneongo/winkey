@@ -19,9 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@clerk/nextjs": ["./src/lib/clerk-mock.tsx"],
-      "@clerk/nextjs/server": ["./src/lib/clerk-mock-server.ts"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
