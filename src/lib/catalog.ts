@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { db, isDatabaseConfigured } from '@/lib/db';
 
 export type ProductRecord = {
   id: number;
@@ -244,6 +244,126 @@ const seedUsers = [
     role: 'Bán hàng'
   }
 ] as const;
+
+function getSeedProductRecords(): ProductRecord[] {
+  const now = new Date().toISOString();
+
+  return seedProducts.map((product, index) => ({
+    id: index + 1,
+    slug: product.slug,
+    name: product.name,
+    description: product.description,
+    created_at: now,
+    price: product.price,
+    original_price: product.original_price,
+    photo_url: product.photo_url,
+    category: product.category,
+    tag: product.tag,
+    rating: product.rating,
+    reviews_count: product.reviews_count,
+    features: [...product.features],
+    is_active: true,
+    updated_at: now
+  }));
+}
+
+function getSeedUserRecords(): UserRecord[] {
+  const now = new Date().toISOString();
+
+  return seedUsers.map((user, index) => ({
+    id: index + 1,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    email: user.email,
+    phone: user.phone,
+    status: user.status,
+    role: user.role,
+    created_at: now,
+    updated_at: now
+  }));
+}
+
+function mapStorefrontProduct(product: ProductRecord) {
+  return {
+    id: product.slug,
+    name: product.name,
+    price: product.price,
+    originalPrice: product.original_price,
+    image: product.photo_url,
+    category: (product.category === 'windows' ||
+    product.category === 'office' ||
+    product.category === 'combo'
+      ? product.category
+      : 'combo') as 'windows' | 'office' | 'combo',
+    tag: product.tag ?? undefined,
+    rating: product.rating,
+    reviewsCount: product.reviews_count,
+    features: product.features,
+    activationDuration: (product.slug === 'office365' ? 'yearly' : 'lifetime') as 'yearly' | 'lifetime',
+    renewalReminder: product.slug === 'office365',
+    supportedDeliveryMethods:
+      product.slug === 'office365'
+        ? (['online', 'ship-code'] as Array<'online' | 'ship-code' | 'ship-disk'>)
+        : (['online', 'ship-code', 'ship-disk'] as Array<'online' | 'ship-code' | 'ship-disk'>)
+  };
+}
+
+function getFallbackOverviewData() {
+  const products = getSeedProductRecords();
+  const users = getSeedUserRecords();
+
+  const categoryCounts = products.reduce<Record<string, number>>((acc, product) => {
+    acc[product.category] = (acc[product.category] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const activeUsers = users.filter((user) => user.status === 'Đang hoạt động').length;
+  const averagePrice = products.length
+    ? Math.round(products.reduce((sum, product) => sum + product.price, 0) / products.length)
+    : 0;
+  const averageOriginalPrice = products.length
+    ? Math.round(products.reduce((sum, product) => sum + product.original_price, 0) / products.length)
+    : 0;
+  const totalReviews = products.reduce((sum, product) => sum + product.reviews_count, 0);
+  const averageRating = products.length
+    ? Number(
+        (
+          products.reduce((sum, product) => sum + product.rating, 0) / products.length
+        ).toFixed(1)
+      )
+    : 0;
+
+  const topProducts = [...products]
+    .sort((left, right) => right.reviews_count - left.reviews_count)
+    .slice(0, 6);
+
+  return {
+    summary: {
+      totalProducts: products.length,
+      totalUsers: users.length,
+      activeUsers,
+      averagePrice,
+      averageOriginalPrice,
+      totalReviews,
+      averageRating
+    },
+    categoryBreakdown: [
+      { label: 'Windows', value: categoryCounts.windows ?? 0 },
+      { label: 'Office', value: categoryCounts.office ?? 0 },
+      { label: 'Combo', value: categoryCounts.combo ?? 0 }
+    ],
+    priceComparison: topProducts.map((product) => ({
+      name: product.name
+        .replace('Microsoft ', '')
+        .replace('Professional ', 'Pro ')
+        .replace('Retail', '')
+        .trim(),
+      salePrice: product.price,
+      listPrice: product.original_price
+    })),
+    recentProducts: products.slice(0, 5)
+  };
+}
 
 let initPromise: Promise<void> | null = null;
 
@@ -891,7 +1011,12 @@ export async function createSupportRequestInDb(data: SupportRequestPayload) {
 }
 
 export async function getDashboardOverviewData() {
-  await ensureDatabaseReady();
+  if (!isDatabaseConfigured()) {
+    return getFallbackOverviewData();
+  }
+
+  try {
+    await ensureDatabaseReady();
 
   const [productResult, userResult] = await Promise.all([
     db.query<ProductRow>('SELECT * FROM products WHERE is_active = TRUE ORDER BY updated_at DESC'),
@@ -926,7 +1051,7 @@ export async function getDashboardOverviewData() {
     .sort((left, right) => right.reviews_count - left.reviews_count)
     .slice(0, 6);
 
-  return {
+    return {
     summary: {
       totalProducts: products.length,
       totalUsers: users.length,
@@ -951,32 +1076,24 @@ export async function getDashboardOverviewData() {
       listPrice: product.original_price
     })),
     recentProducts: products.slice(0, 5)
-  };
+    };
+  } catch (error) {
+    console.error('Falling back to seed overview data because the database is unavailable.', error);
+    return getFallbackOverviewData();
+  }
 }
 
 export async function getStorefrontProducts() {
-  const data = await getProductsFromDb({ page: 1, limit: 100 });
+  if (!isDatabaseConfigured()) {
+    return getSeedProductRecords().map(mapStorefrontProduct);
+  }
 
-  return data.products.map((product) => ({
-    id: product.slug,
-    name: product.name,
-    price: product.price,
-    originalPrice: product.original_price,
-    image: product.photo_url,
-    category: (product.category === 'windows' ||
-    product.category === 'office' ||
-    product.category === 'combo'
-      ? product.category
-      : 'combo') as 'windows' | 'office' | 'combo',
-    tag: product.tag ?? undefined,
-    rating: product.rating,
-    reviewsCount: product.reviews_count,
-    features: product.features,
-    activationDuration: (product.slug === 'office365' ? 'yearly' : 'lifetime') as 'yearly' | 'lifetime',
-    renewalReminder: product.slug === 'office365',
-    supportedDeliveryMethods:
-      product.slug === 'office365'
-        ? (['online', 'ship-code'] as Array<'online' | 'ship-code' | 'ship-disk'>)
-        : (['online', 'ship-code', 'ship-disk'] as Array<'online' | 'ship-code' | 'ship-disk'>)
-  }));
+  try {
+    const data = await getProductsFromDb({ page: 1, limit: 100 });
+
+    return data.products.map((product) => mapStorefrontProduct(product));
+  } catch (error) {
+    console.error('Falling back to seed storefront products because the database is unavailable.', error);
+    return getSeedProductRecords().map(mapStorefrontProduct);
+  }
 }
