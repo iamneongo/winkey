@@ -1,19 +1,19 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { Icons } from '@/components/icons';
 import PageContainer from '@/components/layout/page-container';
 import { Button } from '@/components/ui/button';
 import { NotificationCard } from '@/components/ui/notification-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useRouter } from 'next/navigation';
 import { useNotificationStore } from '../utils/store';
 
 const actionRoutes: Record<string, string> = {
-  view: '/admin/workspaces',
+  view: '/admin/overview',
   'view-product': '/admin/product',
   billing: '/admin/billing',
-  open: '/admin/kanban',
-  'open-chat': '/admin/chat'
+  open: '/admin/overview',
+  'open-chat': '/ho-tro'
 };
 
 export default function NotificationsPage() {
@@ -21,15 +21,15 @@ export default function NotificationsPage() {
   const router = useRouter();
   const count = unreadCount();
 
-  const unreadNotifications = notifications.filter((n) => n.status === 'unread');
-  const readNotifications = notifications.filter((n) => n.status === 'read');
+  const unreadNotifications = notifications.filter((notification) => notification.status === 'unread');
+  const readNotifications = notifications.filter((notification) => notification.status === 'read');
 
   const renderList = (items: typeof notifications) => {
     if (items.length === 0) {
       return (
         <div className='flex flex-col items-center justify-center py-16'>
           <Icons.notification className='text-muted-foreground/40 mb-3 h-10 w-10' />
-          <p className='text-muted-foreground text-sm'>No notifications</p>
+          <p className='text-muted-foreground text-sm'>Chưa có thông báo nào</p>
         </div>
       );
     }
@@ -46,10 +46,10 @@ export default function NotificationsPage() {
             createdAt={notification.createdAt}
             actions={notification.actions}
             onMarkAsRead={markAsRead}
-            onAction={(notifId, actionId) => {
+            onAction={(notificationId, actionId) => {
               const route = actionRoutes[actionId];
               if (route) {
-                markAsRead(notifId);
+                markAsRead(notificationId);
                 router.push(route);
               }
             }}
@@ -61,21 +61,21 @@ export default function NotificationsPage() {
 
   return (
     <PageContainer
-      pageTitle='Notifications'
-      pageDescription='View and manage all your notifications.'
+      pageTitle='Thông báo'
+      pageDescription='Các nhắc việc nội bộ, thay đổi catalog và tín hiệu vận hành gần đây của WinKey.'
       pageHeaderAction={
         count > 0 ? (
           <Button variant='outline' size='sm' onClick={markAllAsRead}>
-            Mark all as read
+            Đánh dấu đã đọc tất cả
           </Button>
         ) : undefined
       }
     >
       <Tabs defaultValue='all'>
         <TabsList>
-          <TabsTrigger value='all'>All ({notifications.length})</TabsTrigger>
-          <TabsTrigger value='unread'>Unread ({unreadNotifications.length})</TabsTrigger>
-          <TabsTrigger value='read'>Read ({readNotifications.length})</TabsTrigger>
+          <TabsTrigger value='all'>Tất cả ({notifications.length})</TabsTrigger>
+          <TabsTrigger value='unread'>Chưa đọc ({unreadNotifications.length})</TabsTrigger>
+          <TabsTrigger value='read'>Đã đọc ({readNotifications.length})</TabsTrigger>
         </TabsList>
         <TabsContent value='all' className='mt-4'>
           {renderList(notifications)}

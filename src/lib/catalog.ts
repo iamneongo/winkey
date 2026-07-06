@@ -35,6 +35,7 @@ type ProductMutationPayload = {
   category: string;
   price: number;
   description: string;
+  photo_url?: string;
 };
 
 type UserMutationPayload = {
@@ -46,18 +47,64 @@ type UserMutationPayload = {
   status: string;
 };
 
+type SupportRequestPayload = {
+  name: string;
+  email: string;
+  issue: string;
+  message: string;
+};
+
+type ProductRow = {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
+  created_at: Date | string;
+  price: number | string;
+  original_price: number | string;
+  photo_url: string;
+  category: string;
+  tag: string | null;
+  rating: number | string;
+  reviews_count: number;
+  features: string[];
+  is_active: boolean;
+  updated_at: Date | string;
+};
+
+type UserRow = {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  status: string;
+  role: string;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+const productPhotoMap: Record<string, string> = {
+  win11pro: '/products/windows-11-pro.svg',
+  win11home: '/products/windows-11-home.svg',
+  win10pro: '/products/windows-10-pro.svg',
+  office2021: '/products/office-2021-pro-plus.svg',
+  office365: '/products/microsoft-365-personal.svg',
+  'combo-pro': '/products/combo-windows-office.svg'
+};
+
 const seedProducts = [
   {
     slug: 'win11pro',
     name: 'Windows 11 Professional Retail',
-    description: 'Bản quyền vĩnh viễn cho máy cá nhân và doanh nghiệp nhỏ.',
+    description: 'Bản quyền vĩnh viễn cho máy cá nhân, kỹ thuật viên và doanh nghiệp nhỏ.',
     price: 249000,
     original_price: 799000,
     category: 'windows',
     tag: 'Bán chạy',
     rating: 4.9,
     reviews_count: 1240,
-    photo_url: 'https://api.slingacademy.com/public/sample-products/1.png',
+    photo_url: productPhotoMap.win11pro,
     features: [
       'Kích hoạt online vĩnh viễn',
       'Cập nhật Windows Update đầy đủ',
@@ -76,7 +123,7 @@ const seedProducts = [
     tag: null,
     rating: 4.8,
     reviews_count: 420,
-    photo_url: 'https://api.slingacademy.com/public/sample-products/2.png',
+    photo_url: productPhotoMap.win11home,
     features: [
       'Kích hoạt chính hãng',
       'Phù hợp người dùng cá nhân',
@@ -95,7 +142,7 @@ const seedProducts = [
     tag: 'Giá tốt',
     rating: 4.9,
     reviews_count: 2310,
-    photo_url: 'https://api.slingacademy.com/public/sample-products/3.png',
+    photo_url: productPhotoMap.win10pro,
     features: [
       'Key Retail kích hoạt online',
       'Ổn định cho văn phòng và gaming',
@@ -114,7 +161,7 @@ const seedProducts = [
     tag: 'Khuyên dùng',
     rating: 4.9,
     reviews_count: 1540,
-    photo_url: 'https://api.slingacademy.com/public/sample-products/4.png',
+    photo_url: productPhotoMap.office2021,
     features: [
       'Word, Excel, PowerPoint, Access',
       'Kích hoạt online theo tài khoản',
@@ -125,15 +172,15 @@ const seedProducts = [
   },
   {
     slug: 'office365',
-    name: 'Microsoft Office 365 Personal (1 năm)',
-    description: 'Giải pháp thuê bao linh hoạt cho nhiều thiết bị và cập nhật mới.',
+    name: 'Microsoft 365 Personal (1 năm)',
+    description: 'Giải pháp thuê bao linh hoạt cho nhiều thiết bị và cập nhật liên tục.',
     price: 249000,
     original_price: 890000,
     category: 'office',
     tag: null,
     rating: 4.7,
     reviews_count: 680,
-    photo_url: 'https://api.slingacademy.com/public/sample-products/5.png',
+    photo_url: productPhotoMap.office365,
     features: [
       'Dùng trên nhiều thiết bị',
       'Tặng 1TB OneDrive',
@@ -152,7 +199,7 @@ const seedProducts = [
     tag: 'Ưu đãi mạnh',
     rating: 5,
     reviews_count: 890,
-    photo_url: 'https://api.slingacademy.com/public/sample-products/6.png',
+    photo_url: productPhotoMap['combo-pro'],
     features: [
       'Gồm 2 key bản quyền',
       'Tiết kiệm hơn mua lẻ',
@@ -200,36 +247,6 @@ const seedUsers = [
 
 let initPromise: Promise<void> | null = null;
 
-type ProductRow = {
-  id: number;
-  slug: string;
-  name: string;
-  description: string;
-  created_at: Date | string;
-  price: number | string;
-  original_price: number | string;
-  photo_url: string;
-  category: string;
-  tag: string | null;
-  rating: number | string;
-  reviews_count: number;
-  features: string[];
-  is_active: boolean;
-  updated_at: Date | string;
-};
-
-type UserRow = {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  status: string;
-  role: string;
-  created_at: Date | string;
-  updated_at: Date | string;
-};
-
 function toIsoString(value: Date | string) {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 }
@@ -271,10 +288,18 @@ function slugify(value: string) {
     .replace(/(^-|-$)/g, '');
 }
 
-function getProductPhoto(category: string) {
-  if (category === 'windows') return 'https://api.slingacademy.com/public/sample-products/7.png';
-  if (category === 'office') return 'https://api.slingacademy.com/public/sample-products/8.png';
-  return 'https://api.slingacademy.com/public/sample-products/9.png';
+function hasBrokenEncoding(value?: string | null) {
+  return Boolean(value && /[ÃÄÂ]/.test(value));
+}
+
+function getProductPhoto(category: string, slug?: string) {
+  if (slug && productPhotoMap[slug]) {
+    return productPhotoMap[slug];
+  }
+
+  if (category === 'windows') return productPhotoMap.win11pro;
+  if (category === 'office') return productPhotoMap.office2021;
+  return productPhotoMap['combo-pro'];
 }
 
 function getDefaultFeatures(category: string) {
@@ -367,6 +392,18 @@ async function ensureDatabaseReady() {
       );
     `);
 
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS support_requests (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        issue TEXT NOT NULL,
+        message TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'new',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
     const productCount = await db.query<{ count: string }>('SELECT COUNT(*)::text AS count FROM products');
     if (Number(productCount.rows[0]?.count ?? 0) === 0) {
       for (const product of seedProducts) {
@@ -401,6 +438,90 @@ async function ensureDatabaseReady() {
           [user.first_name, user.last_name, user.email, user.phone, user.status, user.role]
         );
       }
+    }
+
+    const existingProducts = await db.query<{
+      id: number;
+      slug: string;
+      name: string;
+      photo_url: string;
+      description: string;
+      tag: string | null;
+      features: string[];
+    }>('SELECT id, slug, name, photo_url, description, tag, features FROM products');
+
+    for (const row of existingProducts.rows) {
+      const seed = seedProducts.find((item) => item.slug === row.slug);
+      if (!seed) continue;
+
+      const needsPhotoRefresh =
+        !row.photo_url ||
+        row.photo_url.includes('slingacademy.com') ||
+        row.photo_url.includes('thesvg.org');
+
+      const needsTextRefresh =
+        hasBrokenEncoding(row.name) ||
+        hasBrokenEncoding(row.description) ||
+        hasBrokenEncoding(row.tag) ||
+        row.features.some((feature) => hasBrokenEncoding(feature));
+
+      if (!needsPhotoRefresh && !needsTextRefresh) continue;
+
+      await db.query(
+        `UPDATE products
+         SET name = $2,
+             description = $3,
+             photo_url = $4,
+             tag = $5,
+             rating = $6,
+             reviews_count = $7,
+             features = $8,
+             updated_at = NOW()
+         WHERE id = $1`,
+        [
+          row.id,
+          seed.name,
+          seed.description,
+          needsPhotoRefresh ? seed.photo_url : row.photo_url,
+          seed.tag,
+          seed.rating,
+          seed.reviews_count,
+          seed.features
+        ]
+      );
+    }
+
+    const existingUsers = await db.query<{
+      id: number;
+      email: string;
+      first_name: string;
+      last_name: string;
+      status: string;
+      role: string;
+    }>('SELECT id, email, first_name, last_name, status, role FROM users');
+
+    for (const row of existingUsers.rows) {
+      const seed = seedUsers.find((item) => item.email === row.email);
+      if (!seed) continue;
+
+      const needsRefresh =
+        hasBrokenEncoding(row.first_name) ||
+        hasBrokenEncoding(row.last_name) ||
+        hasBrokenEncoding(row.status) ||
+        hasBrokenEncoding(row.role);
+
+      if (!needsRefresh) continue;
+
+      await db.query(
+        `UPDATE users
+         SET first_name = $2,
+             last_name = $3,
+             status = $4,
+             role = $5,
+             updated_at = NOW()
+         WHERE id = $1`,
+        [row.id, seed.first_name, seed.last_name, seed.status, seed.role]
+      );
     }
   })();
 
@@ -495,7 +616,7 @@ export async function getProductsFromDb({
   );
 
   values.push(limit, offset);
-  const productQuery = await db.query(
+  const productQuery = await db.query<ProductRow>(
     `SELECT *
      FROM products
      ${whereClause}
@@ -519,7 +640,7 @@ export async function getProductsFromDb({
 export async function getProductByIdFromDb(id: number) {
   await ensureDatabaseReady();
 
-  const result = await db.query('SELECT * FROM products WHERE id = $1 LIMIT 1', [id]);
+  const result = await db.query<ProductRow>('SELECT * FROM products WHERE id = $1 LIMIT 1', [id]);
   if (result.rows.length === 0) {
     return {
       success: false,
@@ -539,7 +660,7 @@ export async function createProductInDb(data: ProductMutationPayload) {
   await ensureDatabaseReady();
 
   const slug = await getUniqueSlug(data.name);
-  const result = await db.query(
+  const result = await db.query<ProductRow>(
     `INSERT INTO products (
        slug, name, description, category, price, original_price,
        photo_url, tag, rating, reviews_count, features
@@ -552,7 +673,7 @@ export async function createProductInDb(data: ProductMutationPayload) {
       data.category,
       data.price,
       Math.round(data.price * 2.4),
-      getProductPhoto(data.category),
+      data.photo_url?.trim() || getProductPhoto(data.category, slug),
       getDefaultFeatures(data.category)
     ]
   );
@@ -567,7 +688,7 @@ export async function createProductInDb(data: ProductMutationPayload) {
 export async function updateProductInDb(id: number, data: ProductMutationPayload) {
   await ensureDatabaseReady();
 
-  const existing = await db.query('SELECT id FROM products WHERE id = $1 LIMIT 1', [id]);
+  const existing = await db.query<{ id: number }>('SELECT id FROM products WHERE id = $1 LIMIT 1', [id]);
   if (existing.rows.length === 0) {
     return {
       success: false,
@@ -576,7 +697,7 @@ export async function updateProductInDb(id: number, data: ProductMutationPayload
   }
 
   const slug = await getUniqueSlug(data.name, id);
-  const result = await db.query(
+  const result = await db.query<ProductRow>(
     `UPDATE products
      SET slug = $2,
          name = $3,
@@ -588,7 +709,16 @@ export async function updateProductInDb(id: number, data: ProductMutationPayload
          updated_at = NOW()
      WHERE id = $1
      RETURNING *`,
-    [id, slug, data.name, data.description, data.category, data.price, getProductPhoto(data.category), getDefaultFeatures(data.category)]
+    [
+      id,
+      slug,
+      data.name,
+      data.description,
+      data.category,
+      data.price,
+      data.photo_url?.trim() || getProductPhoto(data.category, slug),
+      getDefaultFeatures(data.category)
+    ]
   );
 
   return {
@@ -654,7 +784,7 @@ export async function getUsersFromDb({
   );
 
   values.push(limit, offset);
-  const userQuery = await db.query(
+  const userQuery = await db.query<UserRow>(
     `SELECT *
      FROM users
      ${whereClause}
@@ -678,7 +808,7 @@ export async function getUsersFromDb({
 export async function createUserInDb(data: UserMutationPayload) {
   await ensureDatabaseReady();
 
-  const result = await db.query(
+  const result = await db.query<UserRow>(
     `INSERT INTO users (first_name, last_name, email, phone, role, status)
      VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING *`,
@@ -695,7 +825,7 @@ export async function createUserInDb(data: UserMutationPayload) {
 export async function updateUserInDb(id: number, data: UserMutationPayload) {
   await ensureDatabaseReady();
 
-  const result = await db.query(
+  const result = await db.query<UserRow>(
     `UPDATE users
      SET first_name = $2,
          last_name = $3,
@@ -740,6 +870,90 @@ export async function deleteUserInDb(id: number) {
   };
 }
 
+export async function createSupportRequestInDb(data: SupportRequestPayload) {
+  await ensureDatabaseReady();
+
+  const result = await db.query<{ id: number; created_at: Date | string }>(
+    `INSERT INTO support_requests (name, email, issue, message)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, created_at`,
+    [data.name, data.email, data.issue, data.message]
+  );
+
+  return {
+    success: true,
+    message: 'Đã ghi nhận yêu cầu hỗ trợ.',
+    request: {
+      id: result.rows[0].id,
+      created_at: toIsoString(result.rows[0].created_at)
+    }
+  };
+}
+
+export async function getDashboardOverviewData() {
+  await ensureDatabaseReady();
+
+  const [productResult, userResult] = await Promise.all([
+    db.query<ProductRow>('SELECT * FROM products WHERE is_active = TRUE ORDER BY updated_at DESC'),
+    db.query<UserRow>('SELECT * FROM users ORDER BY updated_at DESC')
+  ]);
+
+  const products = productResult.rows.map((row) => mapProduct(row));
+  const users = userResult.rows.map((row) => mapUser(row));
+
+  const categoryCounts = products.reduce<Record<string, number>>((acc, product) => {
+    acc[product.category] = (acc[product.category] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const activeUsers = users.filter((user) => user.status === 'Đang hoạt động').length;
+  const averagePrice = products.length
+    ? Math.round(products.reduce((sum, product) => sum + product.price, 0) / products.length)
+    : 0;
+  const averageOriginalPrice = products.length
+    ? Math.round(products.reduce((sum, product) => sum + product.original_price, 0) / products.length)
+    : 0;
+  const totalReviews = products.reduce((sum, product) => sum + product.reviews_count, 0);
+  const averageRating = products.length
+    ? Number(
+        (
+          products.reduce((sum, product) => sum + product.rating, 0) / products.length
+        ).toFixed(1)
+      )
+    : 0;
+
+  const topProducts = [...products]
+    .sort((left, right) => right.reviews_count - left.reviews_count)
+    .slice(0, 6);
+
+  return {
+    summary: {
+      totalProducts: products.length,
+      totalUsers: users.length,
+      activeUsers,
+      averagePrice,
+      averageOriginalPrice,
+      totalReviews,
+      averageRating
+    },
+    categoryBreakdown: [
+      { label: 'Windows', value: categoryCounts.windows ?? 0 },
+      { label: 'Office', value: categoryCounts.office ?? 0 },
+      { label: 'Combo', value: categoryCounts.combo ?? 0 }
+    ],
+    priceComparison: topProducts.map((product) => ({
+      name: product.name
+        .replace('Microsoft ', '')
+        .replace('Professional ', 'Pro ')
+        .replace('Retail', '')
+        .trim(),
+      salePrice: product.price,
+      listPrice: product.original_price
+    })),
+    recentProducts: products.slice(0, 5)
+  };
+}
+
 export async function getStorefrontProducts() {
   const data = await getProductsFromDb({ page: 1, limit: 100 });
 
@@ -757,6 +971,12 @@ export async function getStorefrontProducts() {
     tag: product.tag ?? undefined,
     rating: product.rating,
     reviewsCount: product.reviews_count,
-    features: product.features
+    features: product.features,
+    activationDuration: (product.slug === 'office365' ? 'yearly' : 'lifetime') as 'yearly' | 'lifetime',
+    renewalReminder: product.slug === 'office365',
+    supportedDeliveryMethods:
+      product.slug === 'office365'
+        ? (['online', 'ship-code'] as Array<'online' | 'ship-code' | 'ship-disk'>)
+        : (['online', 'ship-code', 'ship-disk'] as Array<'online' | 'ship-code' | 'ship-disk'>)
   }));
 }

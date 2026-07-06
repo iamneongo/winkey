@@ -1,19 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 export function useMediaQuery() {
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    setIsOpen(mediaQuery.matches);
-
-    const handler = (e: MediaQueryListEvent) => {
-      setIsOpen(e.matches);
-    };
-
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
-
+  const isOpen = useSyncExternalStore(
+    (callback) => {
+      if (typeof window === 'undefined') return () => undefined;
+      const mediaQuery = window.matchMedia('(max-width: 768px)');
+      mediaQuery.addEventListener('change', callback);
+      return () => mediaQuery.removeEventListener('change', callback);
+    },
+    () => (typeof window !== 'undefined' ? window.matchMedia('(max-width: 768px)').matches : false),
+    () => false
+  );
   return { isOpen };
 }

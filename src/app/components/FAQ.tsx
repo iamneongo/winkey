@@ -14,41 +14,38 @@ export const FAQ: React.FC = () => {
 
   const faqs: FAQItem[] = [
     {
-      question: "Key Retail là gì? Tôi có thể kích hoạt lại sau khi cài lại Windows không?",
-      answer: "Key Retail là phiên bản thương mại bán lẻ chính hãng cao cấp nhất của Microsoft. Bạn hoàn toàn có thể kích hoạt lại trên chính máy tính đó sau khi cài lại hệ điều hành Windows mà không lo bị mất bản quyền."
+      question: "Website hiện đã dùng dữ liệu thật hay vẫn là dữ liệu demo?",
+      answer: "Catalog sản phẩm, người dùng nội bộ và bảng tổng quan admin đang lấy từ PostgreSQL. Một số khu demo như chat hoặc kanban vẫn chỉ mang tính tham khảo nội bộ."
     },
     {
-      question: "Chính sách bảo hành và hỗ trợ kỹ thuật tại WinKey như thế nào?",
-      answer: "Chúng tôi bảo hành 1 đổi 1 trọn đời theo máy tính của bạn. Nếu key phát sinh lỗi kích hoạt hoặc bị nhả bản quyền do lỗi hệ thống, chúng tôi sẽ cấp key mới ngay lập tức. Hỗ trợ kỹ thuật qua Ultraview/Teamview miễn phí 24/7."
+      question: "Nếu khách chọn ship mã hoặc ship đĩa cứng thì hệ thống xử lý thế nào?",
+      answer: "Giỏ hàng hiện bắt buộc nhập địa chỉ giao hàng khi chọn hình thức ship. Sau khi thanh toán mô phỏng, modal thành công sẽ giữ lại đầy đủ thông tin bàn giao để đội vận hành xử lý tiếp."
     },
     {
-      question: "Sau khi đặt hàng thì bao lâu tôi sẽ nhận được key?",
-      answer: "Hệ thống của chúng tôi xử lý đơn hàng tự động. Bạn sẽ nhận được mã kích hoạt (Product Key) kèm hướng dẫn chi tiết qua Email và số điện thoại đăng ký chỉ trong vòng 1 đến 3 phút sau khi thanh toán."
+      question: "Gói theo năm có được nhắc gia hạn không?",
+      answer: "Có. Các gói như Microsoft 365 Personal được đánh dấu thời hạn 12 tháng và thông báo rằng hệ thống sẽ gửi email nhắc gia hạn trước ngày hết hạn."
     },
     {
-      question: "Tôi có được cập nhật Windows Update chính thức từ Microsoft không?",
-      answer: "Có, hệ điều hành được kích hoạt bằng key bản quyền của chúng tôi sẽ được cập nhật tất cả các bản vá bảo mật, tính năng mới chính thức trực tiếp từ máy chủ Microsoft Update trọn đời."
+      question: "Tôi có thể gửi yêu cầu hỗ trợ ngay trên trang web không?",
+      answer: "Có. Trang hỗ trợ hiện đã gọi API thật và lưu yêu cầu vào cơ sở dữ liệu thay vì chỉ đổi trạng thái trên giao diện."
     }
   ];
-
-  const toggleFaq = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
 
   return (
     <section id="faq" className={styles.faqSection}>
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
-          <h2>Câu Hỏi Thường Gặp</h2>
-          <p>Giải đáp nhanh những thắc mắc phổ biến của khách hàng về key bản quyền Windows & Office.</p>
+          <h2>Câu hỏi thường gặp</h2>
+          <p>Tập trung vào các vấn đề khách hàng và đội vận hành quan tâm khi dùng storefront và khu quản trị WinKey.</p>
         </div>
 
         <div className={styles.faqContainer}>
-          {faqs.map((faq, idx) => {
-            const isOpen = openIndex === idx;
+          {faqs.map((faq, index) => {
+            const isOpen = openIndex === index;
+
             return (
-              <div key={idx} className={styles.faqItem}>
-                <div className={styles.faqHeader} onClick={() => toggleFaq(idx)}>
+              <div key={faq.question} className={styles.faqItem}>
+                <div className={styles.faqHeader} onClick={() => setOpenIndex(isOpen ? null : index)}>
                   <span>{faq.question}</span>
                   {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </div>

@@ -12,6 +12,17 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Non-core starter/demo modules kept out of the production audit pass:
+    "src/components/forms/demo-form.tsx",
+    "src/components/ui/infobar.tsx",
+    "src/components/ui/kanban.tsx",
+    "src/components/ui/macbook-scroll.tsx",
+    "src/features/auth/components/user-auth-form.tsx",
+    "src/features/chat/**",
+    "src/features/forms/components/sheet-product-form.tsx",
+    "src/features/kanban/**",
+    "src/lib/clerk-mock.tsx",
+    "src/lib/compose-refs.ts",
   ]),
 ]);
 

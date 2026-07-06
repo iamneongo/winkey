@@ -30,4 +30,5 @@ export type ProductMutationPayload = {
   category: string;
   price: number;
   description: string;
+  photo_url?: string;
 };

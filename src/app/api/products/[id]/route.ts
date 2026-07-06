@@ -1,50 +1,62 @@
-// ============================================================
-// Route Handler — Single Product (get + update)
-// ============================================================
-// See src/app/api/products/route.ts for pattern documentation.
-// ============================================================
-
 import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteProductInDb,
   getProductByIdFromDb,
   updateProductInDb
 } from '@/lib/catalog';
+import { productMutationSchema } from '@/lib/api-schemas';
 
 type Params = { params: Promise<{ id: string }> };
 
 export const runtime = 'nodejs';
 
-export async function GET(request: NextRequest, { params }: Params) {
-  const { id } = await params;
-  const data = await getProductByIdFromDb(Number(id));
+function parseId(id: string) {
+  const value = Number(id);
+  return Number.isInteger(value) && value > 0 ? value : null;
+}
 
-  if (!data.success) {
-    return NextResponse.json(data, { status: 404 });
+export async function GET(_request: NextRequest, { params }: Params) {
+  const { id } = await params;
+  const numericId = parseId(id);
+
+  if (!numericId) {
+    return NextResponse.json({ success: false, message: 'Mã sản phẩm không hợp lệ.' }, { status: 400 });
   }
 
-  return NextResponse.json(data);
+  const data = await getProductByIdFromDb(numericId);
+  return NextResponse.json(data, { status: data.success ? 200 : 404 });
 }
 
 export async function PUT(request: NextRequest, { params }: Params) {
   const { id } = await params;
-  const body = await request.json();
-  const data = await updateProductInDb(Number(id), body);
+  const numericId = parseId(id);
 
-  if (!data.success) {
-    return NextResponse.json(data, { status: 404 });
+  if (!numericId) {
+    return NextResponse.json({ success: false, message: 'Mã sản phẩm không hợp lệ.' }, { status: 400 });
   }
 
-  return NextResponse.json(data);
+  const body = await request.json();
+  const parsed = productMutationSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, message: parsed.error.issues[0]?.message ?? 'Dữ liệu sản phẩm không hợp lệ.' },
+      { status: 400 }
+    );
+  }
+
+  const data = await updateProductInDb(numericId, parsed.data);
+  return NextResponse.json(data, { status: data.success ? 200 : 404 });
 }
 
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(_request: NextRequest, { params }: Params) {
   const { id } = await params;
-  const data = await deleteProductInDb(Number(id));
+  const numericId = parseId(id);
 
-  if (!data.success) {
-    return NextResponse.json(data, { status: 404 });
+  if (!numericId) {
+    return NextResponse.json({ success: false, message: 'Mã sản phẩm không hợp lệ.' }, { status: 400 });
   }
 
-  return NextResponse.json(data);
+  const data = await deleteProductInDb(numericId);
+  return NextResponse.json(data, { status: data.success ? 200 : 404 });
 }

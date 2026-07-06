@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WinKey
 
-## Getting Started
+Ứng dụng Next.js cho storefront và khu quản trị WinKey. Dự án hiện ưu tiên luồng `core production`: catalog sản phẩm, giỏ hàng, trang hỗ trợ khách hàng, upload ảnh sản phẩm, dữ liệu thật từ PostgreSQL và route quản trị chuẩn `/admin/*`.
 
-First, run the development server:
+## Yêu cầu môi trường
+
+- Node.js 20+
+- PostgreSQL hoặc Neon
+- Clerk cho đăng nhập khu quản trị
+
+Tạo file `.env.local` từ `.env.example` và điền tối thiểu:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+DATABASE_URL=postgresql://...
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/auth/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/auth/sign-up
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Chạy local
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Mở:
 
-## Learn More
+- Storefront: [http://localhost:3000](http://localhost:3000)
+- Cửa hàng: [http://localhost:3000/cua-hang](http://localhost:3000/cua-hang)
+- Hỗ trợ: [http://localhost:3000/ho-tro](http://localhost:3000/ho-tro)
+- Admin: [http://localhost:3000/admin](http://localhost:3000/admin)
 
-To learn more about Next.js, take a look at the following resources:
+## Kiến trúc hiện tại
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `src/lib/catalog.ts`
+  Lớp dữ liệu chính cho sản phẩm, người dùng, dashboard overview và ticket hỗ trợ.
+- `src/app/api/*`
+  Route Handlers cho products, users, uploads và support.
+- `src/app/(public)/*`
+  Storefront WinKey.
+- `src/app/admin/*`
+  URL chuẩn cho khu quản trị.
+- `src/app/dashboard/*`
+  Giữ lại để tái sử dụng page/layout cũ và redirect sang `/admin` khi cần.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Trạng thái tính năng
 
-## Deploy on Vercel
+- Sản phẩm storefront lấy dữ liệu thật từ DB.
+- Admin sản phẩm/người dùng dùng API thật.
+- Upload ảnh sản phẩm có thay ảnh và xóa ảnh cũ.
+- Form hỗ trợ khách hàng lưu ticket thật vào PostgreSQL.
+- Checkout hiện là luồng mô phỏng có cấu trúc dữ liệu sẵn để nối backend đơn hàng sau.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Lưu ý triển khai
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Khu quản trị yêu cầu Clerk. Nếu thiếu key, ứng dụng sẽ hiển thị thông báo cấu hình thay vì lỗi mơ hồ.
+- Route chuẩn cho admin là `/admin/*`.
+- Khi deploy Vercel, chỉ cần đảm bảo đủ biến môi trường và quyền truy cập PostgreSQL.

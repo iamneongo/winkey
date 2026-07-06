@@ -11,16 +11,16 @@ import { CATEGORY_OPTIONS } from './options';
 export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: 'photo_url',
-    header: 'ẢNH',
+    header: 'Ảnh',
     cell: ({ row }) => {
       return (
-        <div className='relative aspect-square'>
+        <div className='relative h-16 w-16 overflow-hidden rounded-lg border bg-muted/30'>
           <Image
             src={row.getValue('photo_url')}
             alt={row.getValue('name')}
             fill
-            sizes='80px'
-            className='rounded-lg'
+            sizes='64px'
+            className='rounded-lg object-cover'
           />
         </div>
       );
@@ -71,13 +71,12 @@ export const columns: ColumnDef<Product>[] = [
   },
   {
     accessorKey: 'price',
-    header: 'GIÁ'
+    header: 'Giá'
   },
   {
     accessorKey: 'description',
-    header: 'MÔ TẢ'
+    header: 'Mô tả'
   },
-
   {
     id: 'actions',
     cell: ({ row }) => <CellAction data={row.original} />

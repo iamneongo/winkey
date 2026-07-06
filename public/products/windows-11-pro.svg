@@ -1,0 +1,16 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" rx="40" fill="url(#bg)"/>
+  <rect x="74" y="74" width="1052" height="652" rx="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)"/>
+  <rect x="120" y="120" width="180" height="180" rx="28" fill="#ffffff"/>
+  <path d="M168 156L252 144V240L168 241V156ZM264 143L372 128V240H264V143ZM168 253L252 252V348L168 336V253ZM264 252L372 251V368L264 353V252Z" fill="#145AFF"/>
+  <text x="120" y="430" fill="white" font-size="74" font-family="Arial, sans-serif" font-weight="700">Windows 11 Pro</text>
+  <text x="120" y="500" fill="#D6E3FF" font-size="32" font-family="Arial, sans-serif">Retail license • kich hoat online • ban quyen vinh vien</text>
+  <rect x="120" y="560" width="248" height="62" rx="31" fill="white"/>
+  <text x="162" y="601" fill="#145AFF" font-size="28" font-family="Arial, sans-serif" font-weight="700">Winkey Catalog</text>
+  <defs>
+    <linearGradient id="bg" x1="96" y1="80" x2="1052" y2="726" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0E2F80"/>
+      <stop offset="1" stop-color="#145AFF"/>
+    </linearGradient>
+  </defs>
+</svg>

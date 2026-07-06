@@ -19,8 +19,8 @@ export const ProductList: React.FC<{ products: Product[] }> = ({ products }) => 
         <div className={styles.sectionHeader}>
           <h2>Bảng giá key bản quyền</h2>
           <p>
-            Chọn sản phẩm phù hợp với nhu cầu của bạn. Tất cả key đều được đồng bộ từ hệ thống quản
-            trị và có hỗ trợ kích hoạt rõ ràng.
+            Danh sách bên dưới đang đồng bộ từ dữ liệu thật trong hệ thống quản trị. Bạn có thể lọc nhanh theo nhóm
+            sản phẩm trước khi thêm vào giỏ hàng.
           </p>
         </div>
 

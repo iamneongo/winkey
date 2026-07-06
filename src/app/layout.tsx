@@ -2,6 +2,7 @@ import Providers from '@/components/layout/providers';
 import { Toaster } from '@/components/ui/sonner';
 import { DEFAULT_THEME, THEMES } from '@/components/themes/theme.config';
 import ThemeProvider from '@/components/themes/theme-provider';
+import { isClerkConfigured } from '@/lib/clerk-env';
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
@@ -26,7 +27,7 @@ const META_THEME_COLORS = {
 
 export const metadata: Metadata = {
   title: 'WinKey.vn',
-  description: 'WinKey public site and admin dashboard'
+  description: 'Bản quyền Windows, Office và khu quản trị WinKey'
 };
 
 export const viewport: Viewport = {
@@ -38,9 +39,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const activeThemeValue = cookieStore.get('active_theme')?.value;
   const isValidTheme = THEMES.some((t) => t.value === activeThemeValue);
   const themeToApply = isValidTheme ? activeThemeValue! : DEFAULT_THEME;
+  const clerkEnabled = isClerkConfigured();
 
   return (
-    <html lang='en' suppressHydrationWarning data-theme={themeToApply}>
+    <html lang='vi' suppressHydrationWarning data-theme={themeToApply}>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -64,7 +66,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             disableTransitionOnChange
             enableColorScheme
           >
-            <Providers activeThemeValue={themeToApply}>
+            <Providers activeThemeValue={themeToApply} clerkEnabled={clerkEnabled}>
               <Toaster />
               {children}
             </Providers>

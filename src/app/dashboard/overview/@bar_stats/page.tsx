@@ -1,8 +1,7 @@
-import { delay } from '@/constants/mock-api';
 import { BarGraph } from '@/features/overview/components/bar-graph';
+import { getDashboardOverviewData } from '@/lib/catalog';
 
 export default async function BarStats() {
-  await delay(1000);
-
-  return <BarGraph />;
+  const overview = await getDashboardOverviewData();
+  return <BarGraph data={overview.categoryBreakdown} />;
 }

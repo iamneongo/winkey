@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React from "react";
 import { CheckCircle2, ShieldCheck, Mail, Sparkles } from "lucide-react";
 import styles from "./components.module.css";
@@ -9,21 +10,21 @@ export const BottomCta: React.FC = () => {
     <section className={styles.bottomCtaSection}>
       <div className={styles.container}>
         <div className={styles.ctaCard}>
-          {/* Left Column content info */}
           <div className={styles.ctaWrapper}>
-            <h2 className={styles.ctaTitle}>
-              Nâng Cấp Thiết Bị Của Bạn Ngay Hôm Nay
-            </h2>
+            <h2 className={styles.ctaTitle}>Đưa catalog WinKey vào trạng thái bán hàng đồng bộ</h2>
             <p className={styles.ctaDesc}>
-              Đừng để các thông báo hết hạn hay rủi ro bảo mật từ các công cụ crack làm gián đoạn công việc của bạn. Hãy trang bị Windows & Office bản quyền chính hãng ngay hôm nay.
+              Sản phẩm trên landing page, trang cửa hàng và khu admin hiện đang được làm sạch nội dung, ảnh và quy trình bàn giao để đội ngũ có thể vận hành thống nhất.
             </p>
-            <a href="#store" className="btn-grad" style={{ padding: "16px 36px", fontSize: "0.95rem", textTransform: "none", borderRadius: "100px" }}>
-              Xem Bảng Giá Key Bản Quyền
-            </a>
+            <Link
+              href="/cua-hang"
+              className="btn-grad"
+              style={{ padding: "16px 36px", fontSize: "0.95rem", textTransform: "none", borderRadius: "100px" }}
+            >
+              Mở catalog sản phẩm
+            </Link>
           </div>
 
-          {/* Right Column visual: Layered floating software card */}
-          <div 
+          <div
             className="cta-visual-column"
             style={{
               position: "relative",
@@ -34,8 +35,7 @@ export const BottomCta: React.FC = () => {
               alignItems: "center"
             }}
           >
-            {/* Soft decorative glow behind the card */}
-            <div 
+            <div
               style={{
                 position: "absolute",
                 width: "180px",
@@ -46,7 +46,6 @@ export const BottomCta: React.FC = () => {
               }}
             />
 
-            {/* The Floating Activation Card */}
             <div
               style={{
                 background: "#ffffff",
@@ -62,11 +61,22 @@ export const BottomCta: React.FC = () => {
                 transform: "rotate(-2deg) translateY(-10px)"
               }}
             >
-              {/* Card header */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <img src="https://thesvg.org/icons/microsoft-office/default.svg" alt="Office" width="20" height="20" />
-                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-midnight-ink)" }}>Microsoft Office</span>
+                  <div
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 6,
+                      background: "var(--color-sky-wash)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                  >
+                    <ShieldCheck size={12} color="var(--color-signal-blue)" />
+                  </div>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-midnight-ink)" }}>WinKey Catalog</span>
                 </div>
                 <div
                   style={{
@@ -78,34 +88,35 @@ export const BottomCta: React.FC = () => {
                     padding: "2px 6px",
                     borderRadius: "100px",
                     fontSize: "0.55rem",
-                    fontWeight: 700,
+                    fontWeight: 700
                   }}
                 >
                   <CheckCircle2 size={8} />
-                  <span>Đã Kích Hoạt</span>
+                  <span>Đồng bộ</span>
                 </div>
               </div>
 
-              {/* Card body text */}
               <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginBottom: "12px" }}>
-                <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-midnight-ink)" }}>Office 2021 Professional Plus</span>
-                <span style={{ fontSize: "0.6rem", color: "var(--color-ash)" }}>Bản quyền vĩnh viễn trọn đời máy</span>
+                <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-midnight-ink)" }}>
+                  Microsoft 365 Personal
+                </span>
+                <span style={{ fontSize: "0.6rem", color: "var(--color-ash)" }}>
+                  Gói theo năm, có nhắc gia hạn và bàn giao linh hoạt
+                </span>
               </div>
 
-              {/* Sub features list */}
               <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.6rem", color: "var(--color-ash)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <ShieldCheck size={10} color="var(--color-signal-blue)" />
-                  <span>Kích hoạt online trực tiếp 100%</span>
+                  <span>Dữ liệu storefront lấy từ PostgreSQL</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <Mail size={10} color="var(--color-signal-blue)" />
-                  <span>Gửi key tự động qua Email trong 3 phút</span>
+                  <span>Nhắc gia hạn qua email cho gói 12 tháng</span>
                 </div>
               </div>
             </div>
 
-            {/* Overlapping small badge card */}
             <div
               style={{
                 background: "#020520",
@@ -125,10 +136,9 @@ export const BottomCta: React.FC = () => {
             >
               <Sparkles size={10} color="#ffa64d" />
               <span style={{ fontSize: "0.55rem", color: "#ffffff", fontWeight: 700 }}>
-                100% Genuine Partner
+                Core production
               </span>
             </div>
-
           </div>
         </div>
       </div>

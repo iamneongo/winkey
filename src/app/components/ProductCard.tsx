@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Star, Check, ShoppingCart } from 'lucide-react';
 import { Product, useCart } from '../context/CartContext';
 import styles from './components.module.css';
@@ -15,51 +16,68 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const formatPrice = (num: number) =>
     new Intl.NumberFormat('vi-VN', {
       style: 'currency',
-      currency: 'VND'
+      currency: 'VND',
+      maximumFractionDigits: 0
     }).format(num);
-
-  const renderProductLogo = () => {
-    let logoUrl = '';
-    let altText = '';
-
-    if (product.category === 'windows') {
-      logoUrl = 'https://thesvg.org/icons/windows/default.svg';
-      altText = 'Windows Logo';
-    } else if (product.category === 'office') {
-      logoUrl = 'https://thesvg.org/icons/microsoft-office/default.svg';
-      altText = 'Microsoft Office Logo';
-    } else {
-      logoUrl = 'https://thesvg.org/icons/microsoft/default.svg';
-      altText = 'Microsoft Logo';
-    }
-
-    return <img src={logoUrl} alt={altText} width='24' height='24' style={{ objectFit: 'contain' }} />;
-  };
 
   return (
     <div
       className={`glass ${styles.prodCard}`}
       style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {renderProductLogo()}
-          <span
+      <div
+        style={{
+          position: 'relative',
+          aspectRatio: '16 / 10',
+          overflow: 'hidden',
+          borderRadius: '18px',
+          background: 'linear-gradient(135deg, rgba(20,90,255,0.08), rgba(0,0,0,0.02)), #ffffff',
+          border: '1px solid rgba(0, 0, 0, 0.06)'
+        }}
+      >
+        <Image
+          src={product.image}
+          alt={product.name}
+          fill
+          sizes='(max-width: 768px) 100vw, 33vw'
+          className='object-cover'
+        />
+        {product.tag && (
+          <div
             style={{
-              fontSize: '0.75rem',
-              fontWeight: 700,
+              position: 'absolute',
+              top: '12px',
+              left: '12px',
+              padding: '6px 10px',
+              borderRadius: '999px',
+              background: 'rgba(255,255,255,0.92)',
               color: 'var(--color-midnight-ink)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              letterSpacing: '0.01em'
             }}
           >
-            {product.category === 'windows'
-              ? 'Windows'
-              : product.category === 'office'
-                ? 'Office'
-                : 'Combo'}
-          </span>
-        </div>
+            {product.tag}
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span
+          style={{
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            color: 'var(--color-midnight-ink)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}
+        >
+          {product.category === 'windows'
+            ? 'Windows'
+            : product.category === 'office'
+              ? 'Microsoft Office'
+              : 'Combo bản quyền'}
+        </span>
 
         <div
           style={{
@@ -74,10 +92,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             fontWeight: 700
           }}
         >
-          <span
-            style={{ width: '6px', height: '6px', background: 'currentColor', borderRadius: '50%' }}
-          />
-          <span>Còn hàng</span>
+          <span style={{ width: '6px', height: '6px', background: 'currentColor', borderRadius: '50%' }} />
+          <span>Sẵn sàng</span>
         </div>
       </div>
 
@@ -103,13 +119,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
       </div>
 
-      <ul
-        className={styles.featureList}
-        style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: 0, padding: 0 }}
-      >
-        {product.features.map((feature, idx) => (
+      <ul className={styles.featureList} style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: 0, padding: 0 }}>
+        {product.features.map((feature) => (
           <li
-            key={idx}
+            key={feature}
             className={styles.featureItem}
             style={{ display: 'flex', alignItems: 'center', gap: '8px', listStyle: 'none' }}
           >
@@ -123,7 +136,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '16px' }}>
           <span
             style={{
-              fontFamily: 'var(--font-roboto-mono)',
               fontSize: '1.45rem',
               fontWeight: 700,
               color: 'var(--color-signal-blue)',
@@ -132,14 +144,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           >
             {formatPrice(product.price)}
           </span>
-          <span
-            style={{
-              fontFamily: 'var(--font-roboto-mono)',
-              fontSize: '0.85rem',
-              color: 'var(--color-ash)',
-              textDecoration: 'line-through'
-            }}
-          >
+          <span style={{ fontSize: '0.85rem', color: 'var(--color-ash)', textDecoration: 'line-through' }}>
             {formatPrice(product.originalPrice)}
           </span>
         </div>

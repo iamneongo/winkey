@@ -1,7 +1,8 @@
 'use client';
 
 import { LabelList, Pie, PieChart } from 'recharts';
-
+import { Icons } from '@/components/icons';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ChartConfig,
@@ -9,73 +10,72 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
-import { Badge } from '@/components/ui/badge';
-import { Icons } from '@/components/icons';
 
-const chartData = [
-  { browser: 'chrome', visitors: 275, fill: 'var(--color-chrome)' },
-  { browser: 'safari', visitors: 200, fill: 'var(--color-safari)' },
-  { browser: 'firefox', visitors: 187, fill: 'var(--color-firefox)' },
-  { browser: 'edge', visitors: 173, fill: 'var(--color-edge)' },
-  { browser: 'other', visitors: 90, fill: 'var(--color-other)' }
-];
+type CategoryChartItem = {
+  label: string;
+  value: number;
+};
+
+const categoryColors: Record<string, string> = {
+  Windows: 'var(--chart-1)',
+  Office: 'var(--chart-2)',
+  Combo: 'var(--chart-3)'
+};
 
 const chartConfig = {
-  visitors: {
-    label: 'Visitors'
+  value: {
+    label: 'Số lượng'
   },
-  chrome: {
-    label: 'Chrome',
+  Windows: {
+    label: 'Windows',
     color: 'var(--chart-1)'
   },
-  safari: {
-    label: 'Safari',
+  Office: {
+    label: 'Office',
     color: 'var(--chart-2)'
   },
-  firefox: {
-    label: 'Firefox',
+  Combo: {
+    label: 'Combo',
     color: 'var(--chart-3)'
-  },
-  edge: {
-    label: 'Edge',
-    color: 'var(--chart-4)'
-  },
-  other: {
-    label: 'Other',
-    color: 'var(--chart-5)'
   }
 } satisfies ChartConfig;
 
-export function PieGraph() {
+export function PieGraph({ data }: { data: CategoryChartItem[] }) {
+  const chartData = data.map((item) => ({
+    label: item.label,
+    value: item.value,
+    fill: categoryColors[item.label] ?? 'var(--chart-4)'
+  }));
+
   return (
     <Card className='flex h-full flex-col'>
       <CardHeader className='items-center pb-0'>
-        <CardTitle>
-          Pie Chart
+        <CardTitle className='flex items-center gap-2'>
+          Tỷ trọng catalog
           <Badge variant='outline'>
-            <Icons.trendingUp />
-            +5.2%
+            <Icons.badgeCheck />
+            {chartData.length} nhóm
           </Badge>
         </CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardDescription>Tỷ trọng các nhóm sản phẩm hiện được quản lý trong hệ thống.</CardDescription>
       </CardHeader>
       <CardContent className='flex flex-1 items-center justify-center pb-0'>
         <ChartContainer
           config={chartConfig}
-          className='[&_.recharts-text]:fill-background mx-auto aspect-square max-h-[300px] min-h-[250px]'
+          className='[&_.recharts-text]:fill-background mx-auto h-[280px] min-h-[280px] w-full max-w-[300px]'
         >
           <PieChart>
-            <ChartTooltip content={<ChartTooltipContent nameKey='visitors' hideLabel />} />
+            <ChartTooltip content={<ChartTooltipContent nameKey='value' hideLabel />} />
             <Pie
               data={chartData}
-              innerRadius={30}
-              dataKey='visitors'
-              radius={10}
+              innerRadius={36}
+              dataKey='value'
+              nameKey='label'
               cornerRadius={8}
               paddingAngle={4}
             >
               <LabelList
-                dataKey='visitors'
+                dataKey='value'
                 stroke='none'
                 fontSize={12}
                 fontWeight={500}

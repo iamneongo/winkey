@@ -1,22 +1,6 @@
-// ============================================================
-// Route Handler — Products (list + create)
-// ============================================================
-// Used with Pattern 2 (Route Handlers + ORM) or Pattern 3 (BFF).
-//
-// Fullstack (ORM): Replace fakeProducts calls with your ORM
-//   const products = await db.query.products.findMany({ ... })
-//
-// BFF (proxy): Replace with fetch to your external backend
-//   const res = await fetch(`${BACKEND_URL}/products?${searchParams}`, {
-//     headers: { Authorization: `Bearer ${token}` }
-//   })
-//   return NextResponse.json(await res.json())
-//
-// Current: Mock (in-memory fake data for demo/prototyping)
-// ============================================================
-
 import { NextRequest, NextResponse } from 'next/server';
 import { createProductInDb, getProductsFromDb } from '@/lib/catalog';
+import { productMutationSchema } from '@/lib/api-schemas';
 
 export const runtime = 'nodejs';
 
@@ -42,6 +26,18 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const data = await createProductInDb(body);
+  const parsed = productMutationSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: parsed.error.issues[0]?.message ?? 'Dữ liệu sản phẩm không hợp lệ.'
+      },
+      { status: 400 }
+    );
+  }
+
+  const data = await createProductInDb(parsed.data);
   return NextResponse.json(data, { status: 201 });
 }

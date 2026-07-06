@@ -1,0 +1,17 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" rx="40" fill="url(#bg)"/>
+  <rect x="78" y="78" width="1044" height="644" rx="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)"/>
+  <circle cx="220" cy="220" r="100" fill="rgba(255,255,255,0.92)"/>
+  <path d="M182 222C182 188 210 160 244 160C278 160 306 188 306 222C306 256 278 284 244 284C210 284 182 256 182 222Z" fill="#7C3AED"/>
+  <path d="M212 222C212 205 226 191 243 191C260 191 274 205 274 222C274 239 260 253 243 253C226 253 212 239 212 222Z" fill="#22C55E"/>
+  <text x="120" y="430" fill="white" font-size="72" font-family="Arial, sans-serif" font-weight="700">Microsoft 365 Personal</text>
+  <text x="120" y="498" fill="#EEF2FF" font-size="30" font-family="Arial, sans-serif">Thue bao 1 nam • OneDrive 1TB • dong bo nhieu thiet bi</text>
+  <rect x="120" y="554" width="270" height="60" rx="30" fill="white"/>
+  <text x="163" y="594" fill="#5B35D5" font-size="28" font-family="Arial, sans-serif" font-weight="700">Subscription</text>
+  <defs>
+    <linearGradient id="bg" x1="90" y1="72" x2="1076" y2="716" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#312E81"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+</svg>

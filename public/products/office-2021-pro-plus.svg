@@ -1,0 +1,17 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" rx="40" fill="url(#bg)"/>
+  <rect x="76" y="76" width="1048" height="648" rx="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.16)"/>
+  <rect x="120" y="132" width="188" height="188" rx="38" fill="rgba(255,255,255,0.9)"/>
+  <path d="M172 200L240 170L294 200V252L240 282L172 252V200Z" fill="#D24726"/>
+  <path d="M228 198L264 182V270L228 286V198Z" fill="#FF6C3B"/>
+  <text x="120" y="426" fill="white" font-size="72" font-family="Arial, sans-serif" font-weight="700">Office 2021 Pro Plus</text>
+  <text x="120" y="496" fill="#FFE4DC" font-size="30" font-family="Arial, sans-serif">Bo ung dung day du cho hoc tap, van phong va doanh nghiep</text>
+  <rect x="120" y="552" width="360" height="60" rx="30" fill="rgba(255,255,255,0.92)"/>
+  <text x="158" y="592" fill="#C43E22" font-size="28" font-family="Arial, sans-serif" font-weight="700">Word • Excel • PowerPoint</text>
+  <defs>
+    <linearGradient id="bg" x1="98" y1="86" x2="1074" y2="712" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C1D10"/>
+      <stop offset="1" stop-color="#F05A28"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-// import { persist } from 'zustand/middleware';
 import type { NotificationStatus, NotificationAction } from '@/components/ui/notification-card';
 
 export type Notification = {
@@ -20,118 +19,55 @@ type NotificationState = {
   unreadCount: () => number;
 };
 
-const mockNotifications: Notification[] = [
+const initialNotifications: Notification[] = [
   {
     id: '1',
-    title: 'New team member joined',
-    body: 'Sarah Connor has joined the Engineering workspace.',
+    title: 'Catalog đã đồng bộ ảnh sản phẩm',
+    body: 'Ảnh sản phẩm mới đã được cập nhật trong khu quản trị và storefront.',
     status: 'unread',
     createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-    actions: [
-      {
-        id: 'view',
-        label: 'View workspace',
-        type: 'redirect',
-        style: 'primary'
-      }
-    ]
+    actions: [{ id: 'view-product', label: 'Mở sản phẩm', type: 'redirect', style: 'primary' }]
   },
   {
     id: '2',
-    title: 'New product added',
-    body: 'A new product "Dashboard Pro" has been added to the catalog.',
+    title: 'Có yêu cầu hỗ trợ mới',
+    body: 'Một ticket hỗ trợ vừa được tạo từ biểu mẫu khách hàng.',
     status: 'unread',
     createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    actions: [
-      {
-        id: 'view-product',
-        label: 'View products',
-        type: 'redirect',
-        style: 'primary'
-      }
-    ]
+    actions: [{ id: 'open-chat', label: 'Kiểm tra ngay', type: 'redirect', style: 'primary' }]
   },
   {
     id: '3',
-    title: 'Billing cycle updated',
-    body: 'Your Pro plan has been renewed. Next invoice on April 24, 2026.',
-    status: 'unread',
+    title: 'Route quản trị đã chuẩn hóa',
+    body: 'Người dùng hiện truy cập khu quản trị qua đường dẫn /admin thay vì phụ thuộc vào rewrite cũ.',
+    status: 'read',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    actions: [
-      {
-        id: 'billing',
-        label: 'View billing',
-        type: 'redirect',
-        style: 'primary'
-      }
-    ]
-  },
-  {
-    id: '4',
-    title: 'Task assigned to you',
-    body: 'You have been assigned "Update dashboard analytics" on the Kanban board.',
-    status: 'read',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    actions: [
-      {
-        id: 'open',
-        label: 'Open kanban',
-        type: 'redirect',
-        style: 'primary'
-      }
-    ]
-  },
-  {
-    id: '5',
-    title: 'New message from Alex',
-    body: 'Alex sent you a message: "Hey, can we sync on the overview dashboard?"',
-    status: 'read',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-    actions: [
-      {
-        id: 'open-chat',
-        label: 'Open chat',
-        type: 'redirect',
-        style: 'primary'
-      }
-    ]
+    actions: [{ id: 'view', label: 'Xem tổng quan', type: 'redirect', style: 'primary' }]
   }
 ];
 
-export const useNotificationStore = create<NotificationState>()(
-  // To enable persistence across refreshes, uncomment the persist wrapper below:
-  // persist(
-  (set, get) => ({
-    notifications: mockNotifications,
-
-    markAsRead: (id) =>
-      set((state) => ({
-        notifications: state.notifications.map((n) =>
-          n.id === id ? { ...n, status: 'read' as const } : n
-        )
-      })),
-
-    markAllAsRead: () =>
-      set((state) => ({
-        notifications: state.notifications.map((n) => ({
-          ...n,
-          status: 'read' as const
-        }))
-      })),
-
-    removeNotification: (id) =>
-      set((state) => ({
-        notifications: state.notifications.filter((n) => n.id !== id)
-      })),
-
-    addNotification: (notification) =>
-      set((state) => ({
-        notifications: [{ ...notification, status: 'unread' as const }, ...state.notifications]
-      })),
-
-    unreadCount: () => get().notifications.filter((n) => n.status === 'unread').length
-  })
-  //   ,
-  //   { name: 'notifications' }
-  // )
-);
+export const useNotificationStore = create<NotificationState>()((set, get) => ({
+  notifications: initialNotifications,
+  markAsRead: (id) =>
+    set((state) => ({
+      notifications: state.notifications.map((notification) =>
+        notification.id === id ? { ...notification, status: 'read' as const } : notification
+      )
+    })),
+  markAllAsRead: () =>
+    set((state) => ({
+      notifications: state.notifications.map((notification) => ({
+        ...notification,
+        status: 'read' as const
+      }))
+    })),
+  removeNotification: (id) =>
+    set((state) => ({
+      notifications: state.notifications.filter((notification) => notification.id !== id)
+    })),
+  addNotification: (notification) =>
+    set((state) => ({
+      notifications: [{ ...notification, status: 'unread' as const }, ...state.notifications]
+    })),
+  unreadCount: () => get().notifications.filter((notification) => notification.status === 'unread').length
+}));

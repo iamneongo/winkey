@@ -1,7 +1,8 @@
 'use client';
 
-import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
-
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Icons } from '@/components/icons';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ChartConfig,
@@ -9,81 +10,65 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
-import { Badge } from '@/components/ui/badge';
-import { Icons } from '@/components/icons';
-import React from 'react';
 
-const chartData = [
-  { month: 'January', desktop: 342, mobile: 245 },
-  { month: 'February', desktop: 876, mobile: 654 },
-  { month: 'March', desktop: 512, mobile: 387 },
-  { month: 'April', desktop: 629, mobile: 521 },
-  { month: 'May', desktop: 458, mobile: 412 },
-  { month: 'June', desktop: 781, mobile: 598 },
-  { month: 'July', desktop: 394, mobile: 312 },
-  { month: 'August', desktop: 925, mobile: 743 },
-  { month: 'September', desktop: 647, mobile: 489 },
-  { month: 'October', desktop: 532, mobile: 476 },
-  { month: 'November', desktop: 803, mobile: 687 },
-  { month: 'December', desktop: 271, mobile: 198 }
-];
+type PriceComparisonItem = {
+  name: string;
+  salePrice: number;
+  listPrice: number;
+};
 
 const chartConfig = {
-  desktop: {
-    label: 'Desktop',
+  salePrice: {
+    label: 'Giá bán',
     color: 'var(--chart-1)'
   },
-  mobile: {
-    label: 'Mobile',
+  listPrice: {
+    label: 'Giá niêm yết',
     color: 'var(--chart-2)'
   }
 } satisfies ChartConfig;
 
-export function AreaGraph() {
+export function AreaGraph({ data }: { data: PriceComparisonItem[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          Dotted Area Chart
+        <CardTitle className='flex items-center gap-2'>
+          Giá bán và giá niêm yết
           <Badge variant='outline'>
-            <Icons.trendingUp />
-            -5.2%
+            <Icons.billing />
+            Dữ liệu thật
           </Badge>
         </CardTitle>
-        <CardDescription>Showing total visitors for the last 6 months</CardDescription>
+        <CardDescription>So sánh các sản phẩm nổi bật theo số lượt đánh giá hiện có.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <AreaChart accessibilityLayer data={chartData}>
+        <ChartContainer config={chartConfig} className='h-[280px] min-h-[280px] w-full'>
+          <AreaChart accessibilityLayer data={data}>
             <CartesianGrid vertical={false} strokeDasharray='3 3' />
             <XAxis
-              dataKey='month'
+              dataKey='name'
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
+              tickFormatter={(value: string) => value.slice(0, 10)}
             />
+            <YAxis tickLine={false} axisLine={false} width={40} />
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-            <defs>
-              <DottedBackgroundPattern config={chartConfig} />
-            </defs>
             <Area
-              dataKey='mobile'
+              dataKey='listPrice'
               type='natural'
-              fill='url(#dotted-background-pattern-mobile)'
-              fillOpacity={0.4}
-              stroke='var(--color-mobile)'
-              stackId='a'
-              strokeWidth={0.8}
+              fill='var(--color-listPrice)'
+              fillOpacity={0.18}
+              stroke='var(--color-listPrice)'
+              strokeWidth={1.5}
             />
             <Area
-              dataKey='desktop'
+              dataKey='salePrice'
               type='natural'
-              fill='url(#dotted-background-pattern-desktop)'
-              fillOpacity={0.4}
-              stroke='var(--color-desktop)'
-              stackId='a'
-              strokeWidth={0.8}
+              fill='var(--color-salePrice)'
+              fillOpacity={0.28}
+              stroke='var(--color-salePrice)'
+              strokeWidth={1.5}
             />
           </AreaChart>
         </ChartContainer>
@@ -91,26 +76,3 @@ export function AreaGraph() {
     </Card>
   );
 }
-
-const DottedBackgroundPattern = ({ config }: { config: ChartConfig }) => {
-  const items = Object.fromEntries(
-    Object.entries(config).map(([key, value]) => [key, value.color])
-  );
-  return (
-    <>
-      {Object.entries(items).map(([key, value]) => (
-        <pattern
-          key={key}
-          id={`dotted-background-pattern-${key}`}
-          x='0'
-          y='0'
-          width='7'
-          height='7'
-          patternUnits='userSpaceOnUse'
-        >
-          <circle cx='5' cy='5' r='1.5' fill={value} opacity={0.5}></circle>
-        </pattern>
-      ))}
-    </>
-  );
-};

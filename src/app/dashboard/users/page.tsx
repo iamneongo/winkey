@@ -1,12 +1,12 @@
+import type { SearchParams } from 'nuqs/server';
 import PageContainer from '@/components/layout/page-container';
 import UserListingPage from '@/features/users/components/user-listing';
-import { searchParamsCache } from '@/lib/searchparams';
-import type { SearchParams } from 'nuqs/server';
-import { usersInfoContent } from '@/features/users/info-content';
 import { UserFormSheetTrigger } from '@/features/users/components/user-form-sheet';
+import { usersInfoContent } from '@/features/users/info-content';
+import { searchParamsCache } from '@/lib/searchparams';
 
 export const metadata = {
-  title: 'Dashboard: Thành viên'
+  title: 'WinKey Admin | Thành viên'
 };
 
 type PageProps = {

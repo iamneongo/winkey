@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 export interface Product {
   id: string;
@@ -13,6 +13,9 @@ export interface Product {
   rating: number;
   reviewsCount: number;
   features: string[];
+  activationDuration?: "lifetime" | "yearly";
+  renewalReminder?: boolean;
+  supportedDeliveryMethods?: Array<"online" | "ship-code" | "ship-disk">;
 }
 
 export interface CartItem {
@@ -32,46 +35,53 @@ interface CartContextType {
   cartCount: number;
 }
 
+const CART_STORAGE_KEY = "win_keys_cart";
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+function getInitialCart(): CartItem[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  const savedCart = window.localStorage.getItem(CART_STORAGE_KEY);
+  if (!savedCart) {
+    return [];
+  }
+
+  try {
+    return JSON.parse(savedCart) as CartItem[];
+  } catch (error) {
+    console.error("Failed to load cart", error);
+    return [];
+  }
+}
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(getInitialCart);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Load cart from localStorage on mount
-  useEffect(() => {
-    const savedCart = localStorage.getItem("win_keys_cart");
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch (e) {
-        console.error("Failed to load cart", e);
-      }
-    }
-  }, []);
-
-  // Save cart to localStorage on change
   const saveCart = (newCart: CartItem[]) => {
     setCart(newCart);
-    localStorage.setItem("win_keys_cart", JSON.stringify(newCart));
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart));
+    }
   };
 
   const addToCart = (product: Product) => {
     const existingIndex = cart.findIndex((item) => item.product.id === product.id);
-    let newCart: CartItem[];
-    if (existingIndex >= 0) {
-      newCart = [...cart];
-      newCart[existingIndex].quantity += 1;
-    } else {
-      newCart = [...cart, { product, quantity: 1 }];
-    }
+    const newCart =
+      existingIndex >= 0
+        ? cart.map((item, index) =>
+            index === existingIndex ? { ...item, quantity: item.quantity + 1 } : item
+          )
+        : [...cart, { product, quantity: 1 }];
+
     saveCart(newCart);
-    setIsCartOpen(true); // Auto-open cart drawer when adding an item
+    setIsCartOpen(true);
   };
 
   const removeFromCart = (productId: string) => {
-    const newCart = cart.filter((item) => item.product.id !== productId);
-    saveCart(newCart);
+    saveCart(cart.filter((item) => item.product.id !== productId));
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -79,10 +89,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       removeFromCart(productId);
       return;
     }
-    const newCart = cart.map((item) =>
-      item.product.id === productId ? { ...item, quantity } : item
+
+    saveCart(
+      cart.map((item) => (item.product.id === productId ? { ...item, quantity } : item))
     );
-    saveCart(newCart);
   };
 
   const clearCart = () => {
@@ -103,7 +113,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isCartOpen,
         setIsCartOpen,
         cartTotal,
-        cartCount,
+        cartCount
       }}
     >
       {children}

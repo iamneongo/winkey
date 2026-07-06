@@ -18,20 +18,6 @@ const nextConfig: NextConfig = {
       }
     ]
   },
-  async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: '/admin',
-          destination: '/dashboard/overview'
-        },
-        {
-          source: '/admin/:path*',
-          destination: '/dashboard/:path*'
-        }
-      ]
-    };
-  },
   async redirects() {
     return [
       {

@@ -22,51 +22,47 @@ export const Footer: React.FC = () => {
               </svg>
               <span>WinKey.vn</span>
             </div>
-            <p className={styles.footerDesc} style={{ maxWidth: "300px" }}>
-              WinKey.vn chuyên cung cấp các sản phẩm key bản quyền chính hãng Microsoft Windows, Office và phần mềm bản quyền giá tốt nhất Việt Nam.
+            <p className={styles.footerDesc} style={{ maxWidth: "320px" }}>
+              WinKey.vn cung cấp bản quyền Windows, Office và các gói phần mềm Microsoft phù hợp cho cá nhân, kỹ thuật viên và đội vận hành nội bộ.
             </p>
           </div>
 
           <div className={styles.footerCol}>
-            <h4 className={styles.footerColTitle}>Dịch Vụ & Hỗ Trợ</h4>
+            <h4 className={styles.footerColTitle}>Điểm đến nhanh</h4>
             <ul className={styles.footerLinks}>
               <li className={styles.footerLink}>
-                <Link href="/ho-tro" style={{ color: "inherit", textDecoration: "none" }}>Yêu Cầu Hỗ Trợ</Link>
+                <Link href="/cua-hang" style={{ color: "inherit", textDecoration: "none" }}>Cửa hàng</Link>
               </li>
               <li className={styles.footerLink}>
-                <Link href="/huong-dan" style={{ color: "inherit", textDecoration: "none" }}>Hướng Dẫn Kích Hoạt</Link>
+                <Link href="/huong-dan" style={{ color: "inherit", textDecoration: "none" }}>Hướng dẫn kích hoạt</Link>
               </li>
-              <li className={styles.footerLink}>Zalo: 0988.888.888</li>
-              <li className={styles.footerLink}>Email: support@winkey.vn</li>
+              <li className={styles.footerLink}>
+                <Link href="/ho-tro" style={{ color: "inherit", textDecoration: "none" }}>Gửi yêu cầu hỗ trợ</Link>
+              </li>
+              <li className={styles.footerLink}>
+                <Link href="/admin" style={{ color: "inherit", textDecoration: "none" }}>Khu quản trị</Link>
+              </li>
             </ul>
           </div>
 
           <div className={styles.footerCol}>
-            <h4 className={styles.footerColTitle}>Chính Sách</h4>
+            <h4 className={styles.footerColTitle}>Thông tin liên hệ</h4>
             <ul className={styles.footerLinks}>
-              <li className={styles.footerLink}>Chính sách bảo mật</li>
-              <li className={styles.footerLink}>Chính sách bảo hành</li>
-              <li className={styles.footerLink}>Điều khoản dịch vụ</li>
-              <li className={styles.footerLink}>Chính sách hoàn tiền</li>
+              <li className={styles.footerLink}>Zalo: 0988 888 888</li>
+              <li className={styles.footerLink}>Email: support@winkey.vn</li>
+              <li className={styles.footerLink}>Giờ hỗ trợ: 07:00 - 23:00</li>
+              <li className={styles.footerLink}>Hình thức bàn giao: online, ship mã, ship đĩa</li>
             </ul>
           </div>
         </div>
 
         <div className={styles.footerBottom}>
-          <p>&copy; {new Date().getFullYear()} WinKey.vn. Tất cả quyền được bảo lưu.</p>
-          <div className={styles.paymentBadges} style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-            <div style={{ height: "22px", display: "flex", alignItems: "center" }}>
-              <img src="https://thesvg.org/icons/visa/default.svg" alt="Visa" style={{ height: "100%", objectFit: "contain" }} />
-            </div>
-            <div style={{ height: "22px", display: "flex", alignItems: "center" }}>
-              <img src="https://thesvg.org/icons/mastercard/default.svg" alt="Mastercard" style={{ height: "100%", objectFit: "contain" }} />
-            </div>
-            <div style={{ height: "22px", display: "flex", alignItems: "center" }}>
-              <img src="https://thesvg.org/icons/paypal/default.svg" alt="PayPal" style={{ height: "100%", objectFit: "contain" }} />
-            </div>
-            <div style={{ height: "22px", display: "flex", alignItems: "center" }}>
-              <img src="https://thesvg.org/icons/apple-pay/default.svg" alt="Apple Pay" style={{ height: "100%", objectFit: "contain", filter: "brightness(0) invert(1)" }} />
-            </div>
+          <p>&copy; {new Date().getFullYear()} WinKey.vn. Vận hành storefront và admin trên cùng một nguồn dữ liệu.</p>
+          <div className={styles.paymentBadges}>
+            <span className={styles.paymentBadge}>Chuyển khoản</span>
+            <span className={styles.paymentBadge}>MoMo</span>
+            <span className={styles.paymentBadge}>Email</span>
+            <span className={styles.paymentBadge}>Zalo</span>
           </div>
         </div>
       </div>

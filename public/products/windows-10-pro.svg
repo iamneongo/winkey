@@ -1,0 +1,15 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" rx="40" fill="url(#bg)"/>
+  <rect x="74" y="74" width="1052" height="652" rx="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.16)"/>
+  <rect x="120" y="128" width="312" height="188" rx="30" fill="rgba(255,255,255,0.92)"/>
+  <path d="M164 166L224 160V218H164V166ZM232 159L320 151V218H232V159ZM164 226H224V286L164 278V226ZM232 226H320V300L232 290V226Z" fill="#145AFF"/>
+  <text x="120" y="430" fill="white" font-size="74" font-family="Arial, sans-serif" font-weight="700">Windows 10 Pro</text>
+  <text x="120" y="502" fill="#D7E5FF" font-size="30" font-family="Arial, sans-serif">On dinh cho van phong, ky thuat va phong game</text>
+  <text x="120" y="570" fill="white" font-size="28" font-family="Arial, sans-serif">Nhan key nhanh qua email • Bao hanh tron doi</text>
+  <defs>
+    <linearGradient id="bg" x1="104" y1="84" x2="1084" y2="716" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F2048"/>
+      <stop offset="1" stop-color="#1560D9"/>
+    </linearGradient>
+  </defs>
+</svg>

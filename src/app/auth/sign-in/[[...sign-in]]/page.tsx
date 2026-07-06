@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import SignInViewPage from '@/features/auth/components/sign-in-view';
 
 export const metadata: Metadata = {
-  title: 'Authentication | Sign In',
-  description: 'Sign In page for authentication.'
+  title: 'WinKey Admin | Đăng nhập',
+  description: 'Đăng nhập vào khu quản trị WinKey.'
 };
 
 export default async function Page() {

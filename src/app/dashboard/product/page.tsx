@@ -1,29 +1,29 @@
+import Link from 'next/link';
+import { SearchParams } from 'nuqs/server';
+import { Icons } from '@/components/icons';
 import PageContainer from '@/components/layout/page-container';
 import { buttonVariants } from '@/components/ui/button';
 import ProductListingPage from '@/features/products/components/product-listing';
+import { productInfoContent } from '@/config/infoconfig';
 import { searchParamsCache } from '@/lib/searchparams';
 import { cn } from '@/lib/utils';
-import { Icons } from '@/components/icons';
-import Link from 'next/link';
-import { SearchParams } from 'nuqs/server';
-import { productInfoContent } from '@/config/infoconfig';
 
 export const metadata = {
-  title: 'Dashboard: Sản phẩm'
+  title: 'WinKey Admin | Sản phẩm'
 };
 
-type pageProps = {
+type PageProps = {
   searchParams: Promise<SearchParams>;
 };
 
-export default async function Page(props: pageProps) {
+export default async function Page(props: PageProps) {
   const searchParams = await props.searchParams;
   searchParamsCache.parse(searchParams);
 
   return (
     <PageContainer
       pageTitle='Sản phẩm'
-      pageDescription='Quản lý danh mục bán hàng đang hiển thị ở storefront.'
+      pageDescription='Quản lý danh mục đang hiển thị trên storefront và đồng bộ dữ liệu bán hàng.'
       infoContent={productInfoContent}
       pageHeaderAction={
         <Link href='/admin/product/new' className={cn(buttonVariants(), 'text-xs md:text-sm')}>

@@ -1,7 +1,7 @@
-import { delay } from '@/constants/mock-api';
 import { AreaGraph } from '@/features/overview/components/area-graph';
+import { getDashboardOverviewData } from '@/lib/catalog';
 
 export default async function AreaStats() {
-  await delay(2000);
-  return <AreaGraph />;
+  const overview = await getDashboardOverviewData();
+  return <AreaGraph data={overview.priceComparison} />;
 }

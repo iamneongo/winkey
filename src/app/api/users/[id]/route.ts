@@ -1,35 +1,46 @@
-// ============================================================
-// Route Handler — Single User (update + delete)
-// ============================================================
-// See src/app/api/users/route.ts for pattern documentation.
-// ============================================================
-
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteUserInDb, updateUserInDb } from '@/lib/catalog';
+import { userMutationSchema } from '@/lib/api-schemas';
 
 type Params = { params: Promise<{ id: string }> };
 
 export const runtime = 'nodejs';
 
-export async function PUT(request: NextRequest, { params }: Params) {
-  const { id } = await params;
-  const body = await request.json();
-  const data = await updateUserInDb(Number(id), body);
-
-  if (!data.success) {
-    return NextResponse.json(data, { status: 404 });
-  }
-
-  return NextResponse.json(data);
+function parseId(id: string) {
+  const value = Number(id);
+  return Number.isInteger(value) && value > 0 ? value : null;
 }
 
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function PUT(request: NextRequest, { params }: Params) {
   const { id } = await params;
-  const data = await deleteUserInDb(Number(id));
+  const numericId = parseId(id);
 
-  if (!data.success) {
-    return NextResponse.json(data, { status: 404 });
+  if (!numericId) {
+    return NextResponse.json({ success: false, message: 'Mã người dùng không hợp lệ.' }, { status: 400 });
   }
 
-  return NextResponse.json(data);
+  const body = await request.json();
+  const parsed = userMutationSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, message: parsed.error.issues[0]?.message ?? 'Dữ liệu người dùng không hợp lệ.' },
+      { status: 400 }
+    );
+  }
+
+  const data = await updateUserInDb(numericId, parsed.data);
+  return NextResponse.json(data, { status: data.success ? 200 : 404 });
+}
+
+export async function DELETE(_request: NextRequest, { params }: Params) {
+  const { id } = await params;
+  const numericId = parseId(id);
+
+  if (!numericId) {
+    return NextResponse.json({ success: false, message: 'Mã người dùng không hợp lệ.' }, { status: 400 });
+  }
+
+  const data = await deleteUserInDb(numericId);
+  return NextResponse.json(data, { status: data.success ? 200 : 404 });
 }
