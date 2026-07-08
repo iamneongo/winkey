@@ -41,5 +41,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local uploads
-/public/uploads/
+# local uploads (Allowed to push initial images)
+# /public/uploads/
