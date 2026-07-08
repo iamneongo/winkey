@@ -66,7 +66,7 @@ export default async function CustomerOrders(props: {
                 try {
                   const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
                   if (items && items.length > 0) {
-                    firstItemName = items[0].name || `Sản phẩm ID: ${items[0].product_id}`;
+                    firstItemName = items[0].name || `Sản phẩm ID: ${items[0].product_id || items[0].id || 'N/A'}`;
                     if (items.length > 1) {
                       firstItemName += ` và ${items.length - 1} sản phẩm khác`;
                     }
@@ -80,14 +80,14 @@ export default async function CustomerOrders(props: {
                     <TableCell className="font-medium">#{order.id}</TableCell>
                     <TableCell>{new Date(order.created_at).toLocaleDateString('vi-VN')}</TableCell>
                     <TableCell className="max-w-[200px] truncate" title={firstItemName}>{firstItemName}</TableCell>
-                    <TableCell className="font-semibold text-blue-600">{formatCurrency(Number(order.total_amount))}</TableCell>
+                    <TableCell className="font-semibold text-[var(--color-signal-blue)]">{formatCurrency(Number(order.total_amount))}</TableCell>
                     <TableCell>
                       <Badge variant={order.payment_status === 'paid' ? 'default' : (order.payment_status === 'failed' ? 'destructive' : 'secondary')}>
                         {order.payment_status === 'paid' ? 'Đã thanh toán' : (order.payment_status === 'failed' ? 'Thất bại' : 'Đang xử lý')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="outline" size="sm" asChild>
+                      <Button variant="outline" size="sm" asChild className="bg-white text-[var(--color-midnight-ink)] hover:bg-gray-50 border-gray-200">
                         <Link href={`/tai-khoan/don-hang/${order.id}`}>Chi tiết</Link>
                       </Button>
                     </TableCell>

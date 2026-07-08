@@ -135,7 +135,8 @@ export const CartDrawer: React.FC = () => {
 
     try {
       const items = cart.map((item) => ({
-        id: item.product.id,
+        product_id: item.product.id,
+        name: item.product.name,
         quantity: item.quantity,
         price: item.product.price
       }));

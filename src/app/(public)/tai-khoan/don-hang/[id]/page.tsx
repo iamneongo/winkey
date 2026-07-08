@@ -34,7 +34,7 @@ export default async function CustomerOrderDetail(props: {
     notFound(); // Order doesn't belong to this customer or doesn't exist
   }
 
-  let items: { name?: string; product_id: number; quantity: number; price: string | number }[] = [];
+  let items: { name?: string; product_id?: number; id?: number; quantity: number; price: string | number }[] = [];
   try {
     items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
   } catch (e) {
@@ -110,7 +110,7 @@ export default async function CustomerOrderDetail(props: {
                 {items.map((item, idx: number) => (
                   <div key={idx} className="py-4 flex justify-between items-center">
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900">{item.name || `Sản phẩm ID: ${item.product_id}`}</p>
+                      <p className="font-medium text-gray-900">{item.name || `Sản phẩm ID: ${item.product_id || item.id || 'N/A'}`}</p>
                       <p className="text-sm text-gray-500 mt-1">Số lượng: {item.quantity}</p>
                     </div>
                     <div className="font-semibold">
