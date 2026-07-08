@@ -29,7 +29,7 @@ export const PaymentSuccessEmail = ({
   return (
     <Html>
       <Head />
-      <Preview>Thanh toán thành công đơn hàng #{orderId}</Preview>
+      <Preview>{`Thanh toán thành công đơn hàng #${orderId}`}</Preview>
       <Body style={main}>
         <Container style={container}>
           <Heading style={h1}>Thanh toán thành công</Heading>

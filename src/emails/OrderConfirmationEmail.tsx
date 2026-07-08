@@ -27,7 +27,7 @@ export const OrderConfirmationEmail = ({
   return (
     <Html>
       <Head />
-      <Preview>Đơn hàng #{orderId} của bạn đã được ghi nhận</Preview>
+      <Preview>{`Đơn hàng #${orderId} của bạn đã được ghi nhận`}</Preview>
       <Body style={main}>
         <Container style={container}>
           <Heading style={h1}>Xác nhận đơn hàng</Heading>

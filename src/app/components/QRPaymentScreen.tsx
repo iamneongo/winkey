@@ -99,7 +99,7 @@ export function QRPaymentScreen({
             {minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
           </span>
         </div>
-        <Progress value={progressPercent} className="h-2" indicatorClassName={progressPercent < 20 ? 'bg-red-500' : ''} />
+        <Progress value={progressPercent} className="h-2" />
       </div>
 
       <Button variant="outline" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleCancel}>

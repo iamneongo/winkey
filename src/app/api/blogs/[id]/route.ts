@@ -43,9 +43,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const updatedBlog = await updateBlog(id, validatedData);
     return NextResponse.json({ success: true, blog: updatedBlog });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return NextResponse.json({ error: (error as any).errors }, { status: 400 });
     }
     console.error('PUT /api/blogs/[id] error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
