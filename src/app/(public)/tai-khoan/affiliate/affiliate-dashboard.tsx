@@ -19,7 +19,7 @@ export function AffiliateDashboard({ affiliate }: { affiliate: { referral_code?:
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white p-4 border rounded-lg shadow-sm">
           <h3 className="text-sm text-gray-500 font-medium mb-1">Tổng hoa hồng</h3>
-          <p className="text-2xl font-bold text-blue-600">{formatCurrency(affiliate.balance)}</p>
+          <p className="text-2xl font-bold text-blue-600">{formatCurrency(affiliate.balance || 0)}</p>
         </div>
         <div className="bg-white p-4 border rounded-lg shadow-sm">
           <h3 className="text-sm text-gray-500 font-medium mb-1">Mức hoa hồng</h3>

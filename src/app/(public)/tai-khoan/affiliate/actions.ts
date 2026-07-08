@@ -74,7 +74,7 @@ export async function registerAffiliate() {
     refType: 'affiliate'
   });
   
-  sendAffiliateWelcome(email, firstName + ' ' + lastName, refCode);
+  sendAffiliateWelcome(email, (user.firstName || '') + ' ' + (user.lastName || ''), refCode);
 }
 
 export async function requestPayout(formData: FormData) {
