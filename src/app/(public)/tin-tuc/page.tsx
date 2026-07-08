@@ -29,7 +29,7 @@ export default async function NewsPage() {
       <main className="min-h-screen bg-[var(--color-cloud-white)] pt-24 pb-20">
         <div className={styles.container}>
           <div className="mb-12 text-center max-w-2xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-[var(--color-midnight-ink)] mb-4">
+            <h1 style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--color-midnight-ink)" }} className="mb-4">
               Tin tức & Cập nhật
             </h1>
             <p className="text-lg text-[var(--color-slate-gray)]">
