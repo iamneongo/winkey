@@ -4,7 +4,9 @@ import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
-import { Bold, Italic, Strikethrough, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Code, Image as ImageIcon, Link as LinkIcon, Undo, Redo } from 'lucide-react';
+import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
+import { Bold, Italic, Strikethrough, Underline as UnderlineIcon, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Code, Image as ImageIcon, Link as LinkIcon, Undo, Redo, AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -88,6 +90,13 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
       >
         <Strikethrough className="h-4 w-4" />
       </Toggle>
+      <Toggle
+        size="sm"
+        pressed={editor.isActive('underline')}
+        onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
+      >
+        <UnderlineIcon className="h-4 w-4" />
+      </Toggle>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
@@ -142,6 +151,36 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         onPressedChange={() => editor.chain().focus().toggleCodeBlock().run()}
       >
         <Code className="h-4 w-4" />
+      </Toggle>
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
+      <Toggle
+        size="sm"
+        pressed={editor.isActive({ textAlign: 'left' })}
+        onPressedChange={() => editor.chain().focus().setTextAlign('left').run()}
+      >
+        <AlignLeft className="h-4 w-4" />
+      </Toggle>
+      <Toggle
+        size="sm"
+        pressed={editor.isActive({ textAlign: 'center' })}
+        onPressedChange={() => editor.chain().focus().setTextAlign('center').run()}
+      >
+        <AlignCenter className="h-4 w-4" />
+      </Toggle>
+      <Toggle
+        size="sm"
+        pressed={editor.isActive({ textAlign: 'right' })}
+        onPressedChange={() => editor.chain().focus().setTextAlign('right').run()}
+      >
+        <AlignRight className="h-4 w-4" />
+      </Toggle>
+      <Toggle
+        size="sm"
+        pressed={editor.isActive({ textAlign: 'justify' })}
+        onPressedChange={() => editor.chain().focus().setTextAlign('justify').run()}
+      >
+        <AlignJustify className="h-4 w-4" />
       </Toggle>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
@@ -257,6 +296,10 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         openOnClick: false,
         autolink: true,
         defaultProtocol: 'https',
+      }),
+      Underline,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
       }),
     ],
     content: value,

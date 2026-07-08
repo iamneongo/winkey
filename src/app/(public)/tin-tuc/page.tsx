@@ -67,7 +67,7 @@ export default async function NewsPage() {
                       <CalendarDays size={14} className="mr-2" />
                       {formatDate(blog.created_at)}
                     </div>
-                    <h2 className="text-xl font-bold text-[var(--color-midnight-ink)] mb-3 line-clamp-2 group-hover:text-[var(--color-signal-blue)] transition-colors">
+                    <h2 className="text-lg font-bold leading-snug text-[var(--color-midnight-ink)] mb-3 line-clamp-3 group-hover:text-[var(--color-signal-blue)] transition-colors">
                       {blog.title}
                     </h2>
                     <div className="mt-auto pt-4 flex items-center text-sm font-semibold text-[var(--color-signal-blue)]">
