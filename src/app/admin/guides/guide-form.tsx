@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 
-const RichTextEditor = dynamic(() => import('@/components/rich-text-editor'), { ssr: false });
+const RichTextEditor = dynamic(() => import('@/components/rich-text-editor').then(mod => mod.RichTextEditor), { ssr: false });
 
 type GuideFormProps = {
   initialData?: {
