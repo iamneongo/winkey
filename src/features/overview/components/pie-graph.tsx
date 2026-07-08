@@ -49,7 +49,7 @@ export function PieGraph({ data }: { data: CategoryChartItem[] }) {
 
   return (
     <Card className='flex h-full flex-col'>
-      <CardHeader className='items-center pb-0'>
+      <CardHeader className='flex flex-col items-center pb-0'>
         <CardTitle className='flex items-center gap-2'>
           Tỷ trọng catalog
           <Badge variant='outline'>

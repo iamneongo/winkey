@@ -12,7 +12,7 @@ const formatCurrency = (value: number) =>
 export function RecentSales({ products }: { products: ProductRecord[] }) {
   return (
     <Card className='h-full'>
-      <CardHeader>
+      <CardHeader className="flex flex-col">
         <CardTitle>Cập nhật gần đây</CardTitle>
         <CardDescription>Những sản phẩm mới được đồng bộ gần nhất từ cơ sở dữ liệu.</CardDescription>
       </CardHeader>

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { usersInfoContent } from '@/features/users/info-content';
 import { redirect } from 'next/navigation';
+import { InviteMemberDialog } from './invite-dialog';
 
 export const metadata = {
   title: 'WinKey Admin | Thành viên'
@@ -88,7 +89,7 @@ export default async function UsersPage(props: PageProps) {
   }
 
   const client = await clerkClient();
-  const [organization, membershipsResponse] = await Promise.all([
+  const [organization, membershipsResponse, invitationsResponse] = await Promise.all([
     client.organizations.getOrganization({
       organizationId: orgId,
       includeMembersCount: true
@@ -98,10 +99,15 @@ export default async function UsersPage(props: PageProps) {
       limit: 100,
       orderBy: '+first_name',
       ...(query ? { query } : {})
+    }),
+    client.organizations.getOrganizationInvitationList({
+      organizationId: orgId,
+      limit: 100
     })
   ]);
 
   const memberships = membershipsResponse.data;
+  const pendingInvitations = invitationsResponse.data.filter(inv => inv.status === 'pending');
 
   return (
     <PageContainer
@@ -109,44 +115,16 @@ export default async function UsersPage(props: PageProps) {
       pageDescription={`Danh sách thành viên đang lấy trực tiếp từ Clerk cho tổ chức ${organization.name}.`}
       infoContent={usersInfoContent}
       pageHeaderAction={
-        <Button asChild variant='outline'>
-          <Link href='/admin/workspaces/team'>Quản lý trong Clerk</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild variant='outline'>
+            <Link href='/admin/workspaces/team'>Quản lý trong Clerk</Link>
+          </Button>
+          <InviteMemberDialog />
+        </div>
       }
     >
-      <div className='grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]'>
-        <Card>
-          <CardHeader>
-            <CardTitle>{organization.name}</CardTitle>
-            <CardDescription>
-              Organization hiện hoạt động trong Clerk cho khu quản trị WinKey.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            <div className='rounded-xl border p-4'>
-              <div className='text-muted-foreground text-xs uppercase tracking-[0.2em]'>
-                Tổng thành viên
-              </div>
-              <div className='mt-2 text-3xl font-semibold'>
-                {membershipsResponse.totalCount.toLocaleString('vi-VN')}
-              </div>
-            </div>
-            <div className='rounded-xl border p-4'>
-              <div className='text-muted-foreground text-xs uppercase tracking-[0.2em]'>
-                Admin
-              </div>
-              <div className='mt-2 text-3xl font-semibold'>
-                {memberships.filter((membership) => membership.role === 'org:admin').length}
-              </div>
-            </div>
-            <div className='rounded-xl border p-4 text-sm'>
-              <div className='font-medium'>Nguồn dữ liệu</div>
-              <p className='text-muted-foreground mt-2'>
-                Trang này không dùng bảng `users` nội bộ. Mọi thành viên hiển thị đều đến từ Clerk.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className='grid gap-4'>
+
 
         <Card>
           <CardHeader className='gap-3'>
@@ -216,6 +194,45 @@ export default async function UsersPage(props: PageProps) {
             )}
           </CardContent>
         </Card>
+
+        {pendingInvitations.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Lời mời đang chờ ({pendingInvitations.length})</CardTitle>
+              <CardDescription>
+                Các lời mời đã được gửi đi nhưng chưa được chấp nhận.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className='space-y-3'>
+              {pendingInvitations.map((invitation) => (
+                <div
+                  key={invitation.id}
+                  className='flex flex-col gap-3 rounded-xl border p-4 md:flex-row md:items-center md:justify-between'
+                >
+                  <div className='flex items-center gap-3'>
+                    <Avatar className='size-11'>
+                      <AvatarFallback>{getInitials(invitation.emailAddress)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className='font-semibold'>{invitation.emailAddress}</div>
+                      <div className='text-muted-foreground text-sm'>
+                        Trạng thái: Đang chờ
+                      </div>
+                    </div>
+                  </div>
+                  <div className='flex flex-wrap items-center gap-2 text-sm'>
+                    <Badge variant={invitation.role === 'org:admin' ? 'default' : 'outline'}>
+                      {getMembershipRoleLabel(invitation.role)}
+                    </Badge>
+                    <span className='text-muted-foreground'>
+                      Gửi lúc: {formatDate(invitation.createdAt)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </PageContainer>
   );

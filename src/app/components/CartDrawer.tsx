@@ -14,8 +14,10 @@ import {
   Truck,
   X,
 } from "lucide-react";
+import { useAuth } from "@clerk/nextjs";
 import { useCart, type CartItem } from "../context/CartContext";
 import styles from "./components.module.css";
+import { QRPaymentScreen } from "./QRPaymentScreen";
 
 type DeliveryMethod = "online" | "ship-code" | "ship-disk";
 
@@ -25,16 +27,6 @@ type CustomerForm = {
   phone: string;
   deliveryMethod: DeliveryMethod;
   shippingAddress: string;
-};
-
-type CheckoutSummary = {
-  customer: CustomerForm;
-  items: Array<{
-    name: string;
-    key: string;
-    activationDuration: "lifetime" | "yearly";
-    renewalReminder: boolean;
-  }>;
 };
 
 const deliveryOptions: Array<{
@@ -74,14 +66,6 @@ function formatPrice(value: number) {
   }).format(value);
 }
 
-function generateMockKey() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const segment = () =>
-    Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-
-  return `${segment()}-${segment()}-${segment()}-${segment()}-${segment()}`;
-}
-
 function getActivationDurationLabel(duration: "lifetime" | "yearly") {
   return duration === "yearly" ? "12 tháng" : "Vĩnh viễn";
 }
@@ -110,8 +94,9 @@ export const CartDrawer: React.FC = () => {
   const [customerForm, setCustomerForm] = useState<CustomerForm>(initialCustomerForm);
   const [validationError, setValidationError] = useState("");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [checkoutSummary, setCheckoutSummary] = useState<CheckoutSummary | null>(null);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [orderId, setOrderId] = useState<number | null>(null);
+
+  const { userId } = useAuth();
 
   const allowedDeliveryMethods = useMemo(() => getAllowedDeliveryMethods(cart), [cart]);
   const requiresShippingAddress = customerForm.deliveryMethod !== "online";
@@ -122,7 +107,10 @@ export const CartDrawer: React.FC = () => {
     setValidationError("");
   };
 
-  const handleCheckout = () => {
+  const [step, setStep] = useState<'cart' | 'qr' | 'success'>('cart');
+  const [qrData, setQrData] = useState<{ qrImage: string; amount: number; orderId: number } | null>(null);
+
+  const handleCheckout = async () => {
     const trimmedName = customerForm.name.trim();
     const trimmedEmail = customerForm.email.trim();
     const trimmedPhone = customerForm.phone.trim();
@@ -145,40 +133,72 @@ export const CartDrawer: React.FC = () => {
 
     setIsCheckingOut(true);
 
-    window.setTimeout(() => {
-      const summary: CheckoutSummary = {
-        customer: {
-          ...customerForm,
-          name: trimmedName,
-          email: trimmedEmail,
-          phone: trimmedPhone,
-          shippingAddress: trimmedAddress,
-        },
-        items: cart.map((item) => ({
-          name: item.product.name,
-          key: generateMockKey(),
-          activationDuration: item.product.activationDuration ?? "lifetime",
-          renewalReminder: item.product.renewalReminder ?? false,
-        })),
-      };
+    try {
+      const items = cart.map((item) => ({
+        id: item.product.id,
+        quantity: item.quantity,
+        price: item.product.price
+      }));
 
-      setCheckoutSummary(summary);
+      const refCode = localStorage.getItem('referral_code');
+
+      // 1. Create Order
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer: {
+            ...customerForm,
+            name: trimmedName,
+            email: trimmedEmail,
+            phone: trimmedPhone,
+            shippingAddress: trimmedAddress,
+          },
+          items,
+          total: cartTotal,
+          referral_code: refCode,
+          clerk_id: userId ?? undefined,
+        }),
+      });
+
+      const data = await res.json() as { success: boolean; orderId?: number; error?: string };
+
+      if (!res.ok || !data.success || !data.orderId) {
+        setValidationError(data.error ?? 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.');
+        setIsCheckingOut(false);
+        return;
+      }
+
+      setOrderId(data.orderId);
+
+      // 2. Create Invoice
+      const invoiceRes = await fetch('/api/payment/create-invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: data.orderId })
+      });
+      const invoiceData = await invoiceRes.json();
+
+      if (!invoiceRes.ok) {
+        setValidationError(invoiceData.error ?? 'Không thể tạo thanh toán QR, vui lòng thử lại.');
+        setIsCheckingOut(false);
+        return;
+      }
+
+      setQrData({
+        qrImage: invoiceData.qrImage,
+        amount: invoiceData.amount,
+        orderId: data.orderId
+      });
+      
+      setStep('qr');
       setIsCheckingOut(false);
       clearCart();
-      setCustomerForm(initialCustomerForm);
-      setValidationError("");
-    }, 1600);
-  };
-
-  const handleCloseSuccess = () => {
-    setCheckoutSummary(null);
-    setCopiedIndex(null);
-  };
-
-  const copyToClipboard = async (text: string, index: number) => {
-    await navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    window.setTimeout(() => setCopiedIndex(null), 2000);
+    } catch (error) {
+      console.error(error);
+      setValidationError("Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.");
+      setIsCheckingOut(false);
+    }
   };
 
   return (
@@ -200,7 +220,30 @@ export const CartDrawer: React.FC = () => {
         </div>
 
         <div className={styles.drawerBody}>
-          {cart.length === 0 ? (
+          {step === 'qr' && qrData ? (
+            <QRPaymentScreen 
+              qrImage={qrData.qrImage} 
+              amount={qrData.amount} 
+              orderId={qrData.orderId}
+              onSuccess={() => setStep('success')}
+              onTimeout={() => {
+                setValidationError('Thời gian thanh toán đã hết. Đơn hàng vẫn được lưu lại, bạn có thể kiểm tra ở phần Tài khoản.');
+                setStep('cart');
+              }}
+              onCancel={() => setStep('cart')}
+            />
+          ) : step === 'success' ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+              <CheckCircle2 size={64} className="text-blue-500" />
+              <h2 className="text-2xl font-bold text-gray-900">Thanh toán thành công!</h2>
+              <p className="text-gray-600">
+                Đơn hàng #{orderId} của bạn đã được thanh toán. Cảm ơn bạn đã mua hàng tại WinKey.
+              </p>
+              <a href={`/tai-khoan/don-hang`} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Xem đơn hàng
+              </a>
+            </div>
+          ) : cart.length === 0 ? (
             <div className={styles.emptyCart}>
               <ShoppingBag size={48} className={styles.emptyCartIcon} />
               <p>Giỏ hàng của bạn đang trống.</p>
@@ -384,7 +427,7 @@ export const CartDrawer: React.FC = () => {
           )}
         </div>
 
-        {cart.length > 0 && (
+        {cart.length > 0 && step === 'cart' && (
           <div className={styles.drawerFooter}>
             <div className={styles.summaryRow}>
               <span>Tổng cộng:</span>
@@ -397,127 +440,6 @@ export const CartDrawer: React.FC = () => {
           </div>
         )}
       </div>
-
-      {checkoutSummary && (
-        <div className={styles.successOverlay}>
-          <div
-            className={`glass ${styles.successContent}`}
-            style={{
-              maxWidth: 560,
-              textAlign: "left",
-              alignItems: "stretch",
-              maxHeight: "90vh",
-              overflowY: "auto",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <CheckCircle2 size={64} className={styles.successIcon} />
-            </div>
-
-            <div style={{ display: "grid", gap: 8, textAlign: "center" }}>
-              <h2 style={{ margin: 0, color: "var(--color-midnight-ink)" }}>Thanh toán thành công</h2>
-              <p style={{ margin: 0, color: "var(--color-ash)", lineHeight: 1.6 }}>
-                Thông tin bàn giao đã được tạo. Bạn có thể copy key ngay hoặc chuyển sang bước giao hàng nếu khách chọn
-                nhận mã / đĩa cứng.
-              </p>
-            </div>
-
-            <div style={summaryBlockStyle}>
-              <strong style={summaryTitleStyle}>Thông tin khách hàng</strong>
-              <div style={summaryRowStyle}>
-                <span>Họ tên</span>
-                <strong>{checkoutSummary.customer.name}</strong>
-              </div>
-              <div style={summaryRowStyle}>
-                <span>Email</span>
-                <strong>{checkoutSummary.customer.email}</strong>
-              </div>
-              <div style={summaryRowStyle}>
-                <span>Điện thoại</span>
-                <strong>{checkoutSummary.customer.phone}</strong>
-              </div>
-              <div style={summaryRowStyle}>
-                <span>Bàn giao</span>
-                <strong>{deliveryOptions.find((option) => option.value === checkoutSummary.customer.deliveryMethod)?.label}</strong>
-              </div>
-              {checkoutSummary.customer.deliveryMethod !== "online" ? (
-                <div
-                  style={{
-                    borderTop: "1px dashed var(--border-color)",
-                    paddingTop: 10,
-                    display: "grid",
-                    gap: 8,
-                  }}
-                >
-                  <strong style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Truck size={16} />
-                    Địa chỉ giao hàng
-                  </strong>
-                  <span style={{ color: "var(--color-ash)", lineHeight: 1.6 }}>
-                    {checkoutSummary.customer.shippingAddress}
-                  </span>
-                </div>
-              ) : null}
-            </div>
-
-            <div style={{ display: "grid", gap: 12 }}>
-              {checkoutSummary.items.map((item, index) => (
-                <div key={`${item.name}-${index}`} className={styles.licenseCodeContainer} style={{ margin: 0 }}>
-                  <p style={{ fontSize: "0.82rem", color: "var(--muted-text)", margin: "0 0 6px" }}>{item.name}</p>
-                  <div className={styles.licenseCode}>{item.key}</div>
-                  <div
-                    style={{
-                      marginTop: 10,
-                      display: "grid",
-                      gap: 6,
-                      fontSize: "0.82rem",
-                      color: "var(--color-ash)",
-                      lineHeight: 1.55,
-                    }}
-                  >
-                    <span>Thời hạn kích hoạt: {getActivationDurationLabel(item.activationDuration)}</span>
-                    {item.renewalReminder ? (
-                      <span>Hệ thống sẽ tự gửi email nhắc gia hạn trước ngày hết hạn.</span>
-                    ) : (
-                      <span>Gói này không phát sinh phí gia hạn định kỳ.</span>
-                    )}
-                  </div>
-                  <button className={styles.copySuccessBtn} onClick={() => copyToClipboard(item.key, index)}>
-                    {copiedIndex === index ? (
-                      <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <Check size={14} /> Đã sao chép
-                      </span>
-                    ) : (
-                      <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <Copy size={14} /> Sao chép key
-                      </span>
-                    )}
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div
-              style={{
-                borderRadius: 12,
-                background: "rgba(37, 99, 235, 0.06)",
-                padding: 14,
-                fontSize: "0.82rem",
-                color: "var(--color-ash)",
-                lineHeight: 1.6,
-              }}
-            >
-              {checkoutSummary.customer.deliveryMethod === "online"
-                ? "Hướng dẫn kích hoạt chi tiết sẽ được gửi qua email khách hàng sau khi xác nhận thanh toán."
-                : "Đơn đang chờ xử lý giao hàng. Bộ phận vận hành cần đối chiếu địa chỉ và cập nhật trạng thái bàn giao cho khách."}
-            </div>
-
-            <button className="btn-grad" style={{ padding: "12px 30px", width: "100%" }} onClick={handleCloseSuccess}>
-              Hoàn thành
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 };

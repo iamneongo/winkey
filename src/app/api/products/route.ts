@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createProductInDb, getProductsFromDb } from '@/lib/catalog';
 import { productMutationSchema } from '@/lib/api-schemas';
+import { requireAdmin } from '@/lib/api-auth';
 
 export const runtime = 'nodejs';
 
@@ -25,6 +26,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const body = await request.json();
   const parsed = productMutationSchema.safeParse(body);
 

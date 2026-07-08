@@ -54,6 +54,25 @@ type SupportRequestPayload = {
   message: string;
 };
 
+export type BlogRecord = {
+  id: number;
+  title: string;
+  slug: string;
+  content: string;
+  cover_url: string;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BlogMutationPayload = {
+  title: string;
+  slug: string;
+  content: string;
+  cover_url?: string;
+  is_published: boolean;
+};
+
 type ProductRow = {
   id: number;
   slug: string;
@@ -80,6 +99,17 @@ type UserRow = {
   phone: string;
   status: string;
   role: string;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type BlogRow = {
+  id: number;
+  title: string;
+  slug: string;
+  content: string;
+  cover_url: string;
+  is_published: boolean;
   created_at: Date | string;
   updated_at: Date | string;
 };
@@ -365,6 +395,19 @@ function getFallbackOverviewData() {
   };
 }
 
+function mapBlog(row: BlogRow): BlogRecord {
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    content: row.content,
+    cover_url: row.cover_url ?? '',
+    is_published: row.is_published,
+    created_at: toIsoString(row.created_at),
+    updated_at: toIsoString(row.updated_at)
+  };
+}
+
 let initPromise: Promise<void> | null = null;
 
 function toIsoString(value: Date | string) {
@@ -474,7 +517,7 @@ async function getUniqueSlug(name: string, ignoreId?: number) {
   }
 }
 
-async function ensureDatabaseReady() {
+export async function ensureDatabaseReady() {
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
@@ -513,6 +556,33 @@ async function ensureDatabaseReady() {
     `);
 
     await db.query(`
+      CREATE TABLE IF NOT EXISTS guides (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        slug TEXT NOT NULL UNIQUE,
+        content TEXT NOT NULL,
+        category TEXT,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        is_published BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS admin_notifications (
+        id SERIAL PRIMARY KEY,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        body TEXT,
+        ref_id INTEGER,
+        ref_type TEXT,
+        is_read BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.query(`
       CREATE TABLE IF NOT EXISTS support_requests (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
@@ -520,6 +590,156 @@ async function ensureDatabaseReady() {
         issue TEXT NOT NULL,
         message TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'new',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS blogs (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        slug TEXT NOT NULL UNIQUE,
+        content TEXT NOT NULL,
+        cover_url TEXT,
+        is_published BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS customers (
+        id SERIAL PRIMARY KEY,
+        clerk_id TEXT UNIQUE,
+        first_name TEXT,
+        last_name TEXT,
+        email TEXT UNIQUE NOT NULL,
+        phone TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // Migration: make clerk_id nullable for existing DBs and add phone column
+    await db.query(`
+      DO $$ BEGIN
+        ALTER TABLE customers ALTER COLUMN clerk_id DROP NOT NULL;
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END $$;
+    `);
+    await db.query(`
+      DO $$ BEGIN
+        ALTER TABLE customers ADD COLUMN phone TEXT;
+      EXCEPTION WHEN duplicate_column THEN NULL;
+      END $$;
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS affiliates (
+        id SERIAL PRIMARY KEY,
+        customer_id INTEGER REFERENCES customers(id) ON DELETE CASCADE,
+        referral_code VARCHAR(50) UNIQUE NOT NULL,
+        commission_rate DECIMAL(5,2) DEFAULT 10.00,
+        balance DECIMAL(12,2) DEFAULT 0,
+        status VARCHAR(20) DEFAULT 'active',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS payout_requests (
+        id SERIAL PRIMARY KEY,
+        affiliate_id INTEGER REFERENCES affiliates(id),
+        amount NUMERIC(12,2) NOT NULL,
+        bank_name TEXT NOT NULL,
+        bank_account TEXT NOT NULL,
+        account_name TEXT NOT NULL,
+        note TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS orders (
+        id SERIAL PRIMARY KEY,
+        customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+        affiliate_id INTEGER REFERENCES affiliates(id) ON DELETE SET NULL,
+        total_amount NUMERIC(12, 2) NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        items JSONB NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS commissions (
+        id SERIAL PRIMARY KEY,
+        affiliate_id INTEGER REFERENCES affiliates(id) ON DELETE CASCADE,
+        order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+        amount NUMERIC(12, 2) NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // Payment columns on orders (idempotent ALTERs)
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_provider TEXT DEFAULT 'onepay'`);
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS onepay_user_reference TEXT`);
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS onepay_user_id TEXT`);
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS onepay_invoice_reference TEXT`);
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS onepay_invoice_id TEXT`);
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'pending'`);
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ`);
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS license_key_id INTEGER`);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS payment_transactions (
+        id SERIAL PRIMARY KEY,
+        order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+        fund_transfer_id TEXT UNIQUE NOT NULL,
+        bank_txn_ref TEXT,
+        amount NUMERIC(12, 2) NOT NULL,
+        raw_payload JSONB,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS license_keys (
+        id SERIAL PRIMARY KEY,
+        product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+        key_value TEXT NOT NULL UNIQUE,
+        status TEXT NOT NULL DEFAULT 'available',
+        order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+        assigned_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS admin_notifications (
+        id SERIAL PRIMARY KEY,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        body TEXT,
+        ref_id INTEGER,
+        ref_type TEXT,
+        is_read BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS payout_requests (
+        id SERIAL PRIMARY KEY,
+        affiliate_id INTEGER REFERENCES affiliates(id) ON DELETE CASCADE,
+        amount NUMERIC(12, 2) NOT NULL,
+        bank_name TEXT NOT NULL,
+        bank_account TEXT NOT NULL,
+        account_name TEXT NOT NULL,
+        note TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `);
@@ -1096,4 +1316,568 @@ export async function getStorefrontProducts() {
     console.error('Falling back to seed storefront products because the database is unavailable.', error);
     return getSeedProductRecords().map(mapStorefrontProduct);
   }
+}
+
+export async function getProductBySlug(slug: string): Promise<ProductRecord | null> {
+  if (!isDatabaseConfigured()) {
+    const seed = getSeedProductRecords().find((p) => p.slug === slug && p.is_active);
+    return seed ?? null;
+  }
+
+  try {
+    await ensureDatabaseReady();
+    const result = await db.query<ProductRow>(
+      'SELECT * FROM products WHERE slug = $1 AND is_active = TRUE LIMIT 1',
+      [slug]
+    );
+    if (result.rows.length === 0) return null;
+    return mapProduct(result.rows[0]);
+  } catch (error) {
+    console.error('Failed to get product by slug, falling back to seed data.', error);
+    const seed = getSeedProductRecords().find((p) => p.slug === slug && p.is_active);
+    return seed ?? null;
+  }
+}
+
+export async function getRelatedProducts(category: string, excludeSlug: string, limit = 4): Promise<ProductRecord[]> {
+  if (!isDatabaseConfigured()) {
+    return getSeedProductRecords()
+      .filter((p) => p.category === category && p.slug !== excludeSlug && p.is_active)
+      .slice(0, limit);
+  }
+
+  try {
+    await ensureDatabaseReady();
+    const result = await db.query<ProductRow>(
+      'SELECT * FROM products WHERE category = $1 AND slug <> $2 AND is_active = TRUE ORDER BY reviews_count DESC LIMIT $3',
+      [category, excludeSlug, limit]
+    );
+    return result.rows.map(mapProduct);
+  } catch (error) {
+    console.error('Failed to get related products, falling back to seed data.', error);
+    return getSeedProductRecords()
+      .filter((p) => p.category === category && p.slug !== excludeSlug && p.is_active)
+      .slice(0, limit);
+  }
+}
+
+export async function getBlogs(options?: {
+  page?: number;
+  limit?: number;
+  /** @deprecated use status instead */
+  publishedOnly?: boolean;
+  q?: string;
+  status?: 'published' | 'draft';
+}) {
+  if (!isDatabaseConfigured()) {
+    return { blogs: [], totalCount: 0 };
+  }
+  try {
+    await ensureDatabaseReady();
+    const limit = options?.limit ?? 15;
+    const offset = ((options?.page ?? 1) - 1) * limit;
+
+    const conditions: string[] = [];
+    const countParams: unknown[] = [];
+    const queryParams: unknown[] = [];
+
+    // status filter (new param takes precedence over legacy publishedOnly)
+    if (options?.status === 'published') {
+      conditions.push(`is_published = TRUE`);
+    } else if (options?.status === 'draft') {
+      conditions.push(`is_published = FALSE`);
+    } else if (options?.publishedOnly) {
+      conditions.push(`is_published = TRUE`);
+    }
+
+    // text search on title
+    if (options?.q && options.q.trim() !== '') {
+      const paramIdx = conditions.length + 1;
+      conditions.push(`title ILIKE $${paramIdx}`);
+      countParams.push(`%${options.q.trim()}%`);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // Build count query params (only the search term if present)
+    const countResult = await db.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM blogs ${whereClause}`,
+      countParams
+    );
+    const totalCount = parseInt(countResult.rows[0].count, 10);
+
+    // Build data query params: search term(s) first, then limit & offset
+    queryParams.push(...countParams);
+    const limitIdx = queryParams.length + 1;
+    const offsetIdx = queryParams.length + 2;
+    queryParams.push(limit, offset);
+
+    const result = await db.query<BlogRow>(
+      `SELECT * FROM blogs ${whereClause} ORDER BY created_at DESC LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+      queryParams
+    );
+    return {
+      blogs: result.rows.map(mapBlog),
+      totalCount
+    };
+  } catch (e) {
+    console.error('Failed to get blogs', e);
+    return { blogs: [], totalCount: 0 };
+  }
+}
+
+export async function getBlog(idOrSlug: string | number) {
+  if (!isDatabaseConfigured()) return null;
+  try {
+    await ensureDatabaseReady();
+    let result;
+    if (typeof idOrSlug === 'number') {
+      result = await db.query<BlogRow>('SELECT * FROM blogs WHERE id = $1', [idOrSlug]);
+    } else {
+      result = await db.query<BlogRow>('SELECT * FROM blogs WHERE slug = $1', [idOrSlug]);
+    }
+    if (result.rows.length === 0) return null;
+    return mapBlog(result.rows[0]);
+  } catch (e) {
+    console.error('Failed to get blog', e);
+    return null;
+  }
+}
+
+export async function createBlog(data: BlogMutationPayload) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const result = await db.query<BlogRow>(
+    `INSERT INTO blogs (title, slug, content, cover_url, is_published)
+     VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+    [data.title, data.slug, data.content, data.cover_url ?? '', data.is_published]
+  );
+  return mapBlog(result.rows[0]);
+}
+
+export async function updateBlog(id: number, data: BlogMutationPayload) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const result = await db.query<BlogRow>(
+    `UPDATE blogs SET title = $1, slug = $2, content = $3, cover_url = $4, is_published = $5, updated_at = NOW()
+     WHERE id = $6 RETURNING *`,
+    [data.title, data.slug, data.content, data.cover_url ?? '', data.is_published, id]
+  );
+  return mapBlog(result.rows[0]);
+}
+
+export async function deleteBlog(id: number) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  await db.query('DELETE FROM blogs WHERE id = $1', [id]);
+}
+
+// ─── License Keys ─────────────────────────────────────────────────────────────
+
+export async function getLicenseKeyStats(productId: number) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const { rows } = await db.query(
+    `SELECT 
+       COUNT(*) as total,
+       SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available,
+       SUM(CASE WHEN status = 'used' THEN 1 ELSE 0 END) as used
+     FROM license_keys
+     WHERE product_id = $1`,
+    [productId]
+  );
+  return {
+    total: Number(rows[0]?.total || 0),
+    available: Number(rows[0]?.available || 0),
+    used: Number(rows[0]?.used || 0),
+  };
+}
+
+export async function addLicenseKeys(productId: number, keys: string[]): Promise<number> {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  let count = 0;
+  for (const key of keys) {
+    try {
+      await db.query(
+        `INSERT INTO license_keys (product_id, key_value) VALUES ($1, $2) ON CONFLICT (key_value) DO NOTHING`,
+        [productId, key.trim()]
+      );
+      count++;
+    } catch {
+      // skip duplicates
+    }
+  }
+  return count;
+}
+
+export async function assignLicenseKey(orderId: number, productId: number): Promise<string | null> {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const client = await (db as unknown as import('pg').Pool).connect();
+  try {
+    await client.query('BEGIN');
+    const result = await client.query(
+      `SELECT id, key_value FROM license_keys
+       WHERE product_id = $1 AND status = 'available'
+       LIMIT 1 FOR UPDATE SKIP LOCKED`,
+      [productId]
+    );
+    if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return null;
+    }
+    const { id: keyId, key_value } = result.rows[0];
+    await client.query(
+      `UPDATE license_keys SET status = 'used', order_id = $1, assigned_at = NOW() WHERE id = $2`,
+      [orderId, keyId]
+    );
+    await client.query(
+      `UPDATE orders SET license_key_id = $1 WHERE id = $2`,
+      [keyId, orderId]
+    );
+    await client.query('COMMIT');
+    return key_value as string;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+export async function getLicenseKeyForOrder(orderId: number): Promise<string | null> {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const result = await db.query(
+    `SELECT lk.key_value FROM license_keys lk
+     JOIN orders o ON o.license_key_id = lk.id
+     WHERE o.id = $1 AND o.payment_status = 'paid'`,
+    [orderId]
+  );
+  return result.rows[0]?.key_value ?? null;
+}
+
+export async function getLicenseKeyStockCount(productId: number): Promise<number> {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const result = await db.query<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM license_keys WHERE product_id = $1 AND status = 'available'`,
+    [productId]
+  );
+  return Number(result.rows[0]?.count ?? 0);
+}
+
+// ─── Admin Notifications ──────────────────────────────────────────────────────
+
+export async function createNotification(params: {
+  type: string;
+  title: string;
+  body?: string;
+  refId?: number;
+  refType?: string;
+}) {
+  if (!isDatabaseConfigured()) return;
+  try {
+    await ensureDatabaseReady();
+    await db.query(
+      `INSERT INTO admin_notifications (type, title, body, ref_id, ref_type)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [params.type, params.title, params.body ?? null, params.refId ?? null, params.refType ?? null]
+    );
+  } catch (err) {
+    console.error('[Notification] Failed to create notification:', err);
+  }
+}
+
+export async function getNotificationUnreadCount(): Promise<number> {
+  if (!isDatabaseConfigured()) return 0;
+  try {
+    await ensureDatabaseReady();
+    const result = await db.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM admin_notifications WHERE is_read = FALSE`
+    );
+    return Number(result.rows[0]?.count ?? 0);
+  } catch {
+    return 0;
+  }
+}
+
+export async function getNotifications(params: { limit?: number; offset?: number; unreadOnly?: boolean } = {}) {
+  if (!isDatabaseConfigured()) return [];
+  await ensureDatabaseReady();
+  const { limit = 20, offset = 0, unreadOnly = false } = params;
+  const where = unreadOnly ? 'WHERE is_read = FALSE' : '';
+  const result = await db.query(
+    `SELECT * FROM admin_notifications ${where} ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+    [limit, offset]
+  );
+  return result.rows;
+}
+
+export async function markNotificationRead(id: number) {
+  if (!isDatabaseConfigured()) return;
+  await ensureDatabaseReady();
+  await db.query(`UPDATE admin_notifications SET is_read = TRUE WHERE id = $1`, [id]);
+}
+
+export async function markAllNotificationsRead() {
+  if (!isDatabaseConfigured()) return;
+  await ensureDatabaseReady();
+  await db.query(`UPDATE admin_notifications SET is_read = TRUE WHERE is_read = FALSE`);
+}
+
+// ─── Orders ───────────────────────────────────────────────────────────────────
+
+export async function getOrdersPaginated(params: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  query?: string;
+}) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const { page = 1, limit = 20, status, query } = params;
+  const offset = (page - 1) * limit;
+  const conditions: string[] = [];
+  const values: unknown[] = [];
+  let idx = 1;
+  if (status) { conditions.push(`o.payment_status = $${idx++}`); values.push(status); }
+  if (query) { conditions.push(`(c.email ILIKE $${idx} OR o.id::text = $${idx})`); values.push(`%${query}%`); idx++; }
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const result = await db.query(
+    `SELECT o.*, c.email as customer_email, c.first_name, c.last_name
+     FROM orders o
+     LEFT JOIN customers c ON o.customer_id = c.id
+     ${where}
+     ORDER BY o.created_at DESC
+     LIMIT $${idx} OFFSET $${idx + 1}`,
+    [...values, limit, offset]
+  );
+  const countResult = await db.query<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM orders o LEFT JOIN customers c ON o.customer_id = c.id ${where}`,
+    values
+  );
+  return { orders: result.rows, totalCount: Number(countResult.rows[0]?.count ?? 0) };
+}
+
+export async function getOrderById(id: number) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const result = await db.query(
+    `SELECT o.*,
+       c.email as customer_email, c.first_name, c.last_name, c.phone,
+       lk.key_value as license_key,
+       a.referral_code, a.commission_rate
+     FROM orders o
+     LEFT JOIN customers c ON o.customer_id = c.id
+     LEFT JOIN license_keys lk ON o.license_key_id = lk.id
+     LEFT JOIN affiliates a ON o.affiliate_id = a.id
+     WHERE o.id = $1`,
+    [id]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function getOrdersByCustomer(customerId: number, params: { page?: number; limit?: number } = {}) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const { page = 1, limit = 10 } = params;
+  const offset = (page - 1) * limit;
+  const result = await db.query(
+    `SELECT o.*, lk.key_value as license_key
+     FROM orders o
+     LEFT JOIN license_keys lk ON o.license_key_id = lk.id
+     WHERE o.customer_id = $1
+     ORDER BY o.created_at DESC
+     LIMIT $2 OFFSET $3`,
+    [customerId, limit, offset]
+  );
+  const countResult = await db.query<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM orders WHERE customer_id = $1`,
+    [customerId]
+  );
+  const total = Number(countResult.rows[0]?.count ?? 0);
+  return { 
+    orders: result.rows, 
+    totalCount: total,
+    total,
+    totalPages: Math.ceil(total / limit)
+  };
+}
+
+// ─── Affiliates ───────────────────────────────────────────────────────────────
+
+export async function getAffiliateByClerkId(clerkId: string) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const result = await db.query(
+    `SELECT a.*, c.first_name, c.last_name, c.email, c.clerk_id
+     FROM affiliates a
+     JOIN customers c ON a.customer_id = c.id
+     WHERE c.clerk_id = $1`,
+    [clerkId]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function getAffiliateById(id: number) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const result = await db.query(
+    `SELECT a.*, c.first_name, c.last_name, c.email
+     FROM affiliates a
+     JOIN customers c ON a.customer_id = c.id
+     WHERE a.id = $1`,
+    [id]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function getCommissionsByAffiliate(affiliateId: number) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const result = await db.query(
+    `SELECT cm.*, o.total_amount FROM commissions cm
+     JOIN orders o ON cm.order_id = o.id
+     WHERE cm.affiliate_id = $1
+     ORDER BY cm.created_at DESC`,
+    [affiliateId]
+  );
+  return result.rows;
+}
+
+export async function getAffiliatesStats() {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const result = await db.query(`
+    SELECT
+      COUNT(*)::text AS total_affiliates,
+      COALESCE(SUM(CASE WHEN cm.status = 'pending' THEN cm.amount ELSE 0 END), 0)::text AS total_pending,
+      COALESCE(SUM(CASE WHEN cm.status = 'paid' THEN cm.amount ELSE 0 END), 0)::text AS total_paid
+    FROM affiliates a
+    LEFT JOIN commissions cm ON cm.affiliate_id = a.id
+  `);
+  return result.rows[0];
+}
+
+export async function getAffiliatesPaginated(params: { page: number; limit: number; query?: string }) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+
+  const { page, limit, query } = params;
+  const offset = (page - 1) * limit;
+
+  let whereClause = '';
+  const values: (string | number)[] = [];
+
+  if (query) {
+    whereClause = `WHERE c.email ILIKE $1 OR c.first_name ILIKE $1 OR c.last_name ILIKE $1 OR a.referral_code ILIKE $1`;
+    values.push(`%${query}%`);
+  }
+
+  const countQuery = `
+    SELECT COUNT(*) 
+    FROM affiliates a
+    JOIN customers c ON a.customer_id = c.id
+    ${whereClause}
+  `;
+  const { rows: countRows } = await db.query(countQuery, values);
+  const total = parseInt(countRows[0].count, 10);
+
+  const dataQuery = `
+    SELECT a.*, c.first_name, c.last_name, c.email
+    FROM affiliates a
+    JOIN customers c ON a.customer_id = c.id
+    ${whereClause}
+    ORDER BY a.created_at DESC
+    LIMIT $${values.length + 1} OFFSET $${values.length + 2}
+  `;
+  values.push(limit, offset);
+
+  const { rows } = await db.query(dataQuery, values);
+
+  return {
+    affiliates: rows,
+    total,
+    totalPages: Math.ceil(total / limit),
+  };
+}
+
+
+export async function getOrderByIdForCustomer(orderId: number, customerId: number) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  
+  const { rows } = await db.query(
+    `SELECT o.*, l.key_value as license_key 
+     FROM orders o
+     LEFT JOIN license_keys l ON o.license_key_id = l.id
+     WHERE o.id = $1 AND o.customer_id = $2`,
+    [orderId, customerId]
+  );
+  return rows[0] || null;
+}
+
+// ─── Guides ─────────────────────────────────────────────────────────────
+
+export async function getGuidesPaginated(params: { page: number; limit: number; query?: string }) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+
+  const { page, limit, query } = params;
+  const offset = (page - 1) * limit;
+
+  let whereClause = '';
+  const values: (string | number)[] = [];
+
+  if (query) {
+    whereClause = `WHERE title ILIKE $1`;
+    values.push(`%${query}%`);
+  }
+
+  const countQuery = `SELECT COUNT(*) FROM guides ${whereClause}`;
+  const { rows: countRows } = await db.query(countQuery, values);
+  const total = parseInt(countRows[0].count, 10);
+
+  const dataQuery = `
+    SELECT * FROM guides
+    ${whereClause}
+    ORDER BY sort_order ASC, created_at DESC
+    LIMIT $${values.length + 1} OFFSET $${values.length + 2}
+  `;
+  values.push(limit, offset);
+
+  const { rows } = await db.query(dataQuery, values);
+
+  return {
+    guides: rows,
+    total,
+    totalPages: Math.ceil(total / limit),
+  };
+}
+
+export async function getPublicGuides() {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const { rows } = await db.query(`
+    SELECT * FROM guides 
+    WHERE is_published = TRUE 
+    ORDER BY category, sort_order ASC, created_at DESC
+  `);
+  return rows;
+}
+
+export async function getGuideBySlug(slug: string) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const { rows } = await db.query(`SELECT * FROM guides WHERE slug = $1`, [slug]);
+  return rows[0] || null;
+}
+
+export async function getGuideById(id: number) {
+  if (!isDatabaseConfigured()) throw new Error('DB not configured');
+  await ensureDatabaseReady();
+  const { rows } = await db.query(`SELECT * FROM guides WHERE id = $1`, [id]);
+  return rows[0] || null;
 }

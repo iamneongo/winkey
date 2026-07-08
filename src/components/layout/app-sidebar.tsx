@@ -34,6 +34,7 @@ import { navGroups } from '@/config/nav-config';
 import { useFilteredNavGroups } from '@/hooks/use-nav';
 import { Icons } from '../icons';
 import { OrgSwitcher } from '../org-switcher';
+import { NotificationBadge } from '@/components/notification-badge';
 
 export default function AppSidebar() {
   const pathname = usePathname();
@@ -90,6 +91,7 @@ export default function AppSidebar() {
                       <Link href={item.url}>
                         <Icon />
                         <span>{item.title}</span>
+                        {item.title === 'Thông báo' && <NotificationBadge />}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

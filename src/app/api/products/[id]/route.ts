@@ -5,6 +5,7 @@ import {
   updateProductInDb
 } from '@/lib/catalog';
 import { productMutationSchema } from '@/lib/api-schemas';
+import { requireAdmin } from '@/lib/api-auth';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -28,6 +29,9 @@ export async function GET(_request: NextRequest, { params }: Params) {
 }
 
 export async function PUT(request: NextRequest, { params }: Params) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const { id } = await params;
   const numericId = parseId(id);
 
@@ -50,6 +54,9 @@ export async function PUT(request: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(_request: NextRequest, { params }: Params) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const { id } = await params;
   const numericId = parseId(id);
 

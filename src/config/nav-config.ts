@@ -21,6 +21,38 @@ export const navGroups: NavGroup[] = [
         items: []
       },
       {
+        title: 'Đơn hàng',
+        url: '/admin/orders',
+        icon: 'billing',
+        isActive: false,
+        shortcut: ['o', 'o'],
+        items: []
+      },
+      {
+        title: 'Cộng tác viên',
+        url: '/admin/affiliates',
+        icon: 'user',
+        isActive: false,
+        shortcut: ['a', 'a'],
+        items: []
+      },
+      {
+        title: 'Bài viết',
+        url: '/admin/blogs',
+        icon: 'post',
+        isActive: false,
+        shortcut: ['b', 'b'],
+        items: []
+      },
+      {
+        title: 'Hướng dẫn',
+        url: '/admin/guides',
+        icon: 'page',
+        isActive: false,
+        shortcut: ['g', 'g'],
+        items: []
+      },
+      {
         title: 'Thành viên',
         url: '/admin/users',
         icon: 'teams',

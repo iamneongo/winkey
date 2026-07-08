@@ -5,6 +5,7 @@ import type { Product } from '../api/types';
 import { notFound } from 'next/navigation';
 import ProductForm from './product-form';
 import { productByIdOptions } from '../api/queries';
+import { LicenseKeyManager } from './license-key-manager';
 
 type TProductViewPageProps = {
   productId: string;
@@ -25,5 +26,10 @@ function EditProductView({ productId }: { productId: number }) {
     notFound();
   }
 
-  return <ProductForm initialData={data.product as Product} pageTitle='Cập nhật sản phẩm' />;
+  return (
+    <div className="space-y-6">
+      <ProductForm initialData={data.product as Product} pageTitle='Cập nhật sản phẩm' />
+      <LicenseKeyManager productId={productId} />
+    </div>
+  );
 }

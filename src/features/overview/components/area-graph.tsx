@@ -31,7 +31,7 @@ const chartConfig = {
 export function AreaGraph({ data }: { data: PriceComparisonItem[] }) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-col">
         <CardTitle className='flex items-center gap-2'>
           Giá bán và giá niêm yết
           <Badge variant='outline'>

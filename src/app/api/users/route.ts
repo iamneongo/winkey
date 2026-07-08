@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUserInDb, getUsersFromDb } from '@/lib/catalog';
 import { userMutationSchema } from '@/lib/api-schemas';
+import { requireAdmin } from '@/lib/api-auth';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const { searchParams } = request.nextUrl;
 
   const page = Number(searchParams.get('page') ?? 1);
@@ -25,6 +29,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const body = await request.json();
   const parsed = userMutationSchema.safeParse(body);
 

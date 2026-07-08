@@ -3,6 +3,8 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { NextResponse } from 'next/server';
 import { managedUploadDeleteSchema } from '@/lib/api-schemas';
+import { requireAdmin } from '@/lib/api-auth';
+import { put } from '@vercel/blob';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -35,6 +37,9 @@ function resolveManagedUploadPath(url: string) {
 }
 
 export async function POST(request: Request) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file');
@@ -57,20 +62,36 @@ export async function POST(request: Request) {
       );
     }
 
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products');
-    await mkdir(uploadDir, { recursive: true });
+    // if no BLOB_READ_WRITE_TOKEN, mock the upload
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.warn('BLOB_READ_WRITE_TOKEN missing. Using local mock for product image.');
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products');
+      await mkdir(uploadDir, { recursive: true });
+      const extension = getExtension(file);
+      const filename = `${Date.now()}-${randomUUID()}${extension}`;
+      const filePath = path.join(uploadDir, filename);
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await writeFile(filePath, buffer);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Đã upload ảnh sản phẩm (local fallback).',
+        url: `${UPLOAD_PREFIX}${filename}`
+      });
+    }
 
     const extension = getExtension(file);
     const filename = `${Date.now()}-${randomUUID()}${extension}`;
-    const filePath = path.join(uploadDir, filename);
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    await writeFile(filePath, buffer);
+    
+    const blob = await put(`products/${filename}`, file, {
+      access: 'public',
+      addRandomSuffix: false
+    });
 
     return NextResponse.json({
       success: true,
       message: 'Đã upload ảnh sản phẩm.',
-      url: `${UPLOAD_PREFIX}${filename}`
+      url: blob.url
     });
   } catch (error) {
     console.error('Product image upload failed:', error);
@@ -82,6 +103,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const parsed = managedUploadDeleteSchema.safeParse(body);

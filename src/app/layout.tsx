@@ -8,6 +8,8 @@ import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import NextTopLoader from 'nextjs-toploader';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import { Suspense } from 'react';
+import { ReferralTracker } from './components/ReferralTracker';
 import '../styles/globals.css';
 
 const geistSans = Geist({
@@ -26,8 +28,33 @@ const META_THEME_COLORS = {
 };
 
 export const metadata: Metadata = {
-  title: 'WinKey.vn',
-  description: 'Bản quyền Windows, Office và khu quản trị WinKey'
+  metadataBase: new URL('https://winkey.vn'),
+  title: {
+    default: 'WinKey - Bản quyền Windows & Office chính hãng',
+    template: '%s | WinKey'
+  },
+  description:
+    'Mua bản quyền Windows 11, Windows 10, Office 2021, Office 365 chính hãng giá tốt. Kích hoạt online vĩnh viễn, bảo hành trọn đời, giao key nhanh qua email.',
+  openGraph: {
+    type: 'website',
+    locale: 'vi_VN',
+    url: 'https://winkey.vn',
+    siteName: 'WinKey.vn',
+    title: 'WinKey - Bản quyền Windows & Office chính hãng',
+    description:
+      'Mua bản quyền Windows 11, Windows 10, Office 2021, Office 365 chính hãng giá tốt. Kích hoạt online vĩnh viễn, bảo hành trọn đời.',
+    images: ['/og-image.jpg']
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'WinKey - Bản quyền Windows & Office chính hãng',
+    description: 'Mua bản quyền Windows 11, Windows 10, Office 2021, Office 365 chính hãng giá tốt.',
+    images: ['/og-image.jpg']
+  },
+  robots: {
+    index: true,
+    follow: true
+  }
 };
 
 export const viewport: Viewport = {
@@ -58,6 +85,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} bg-background overflow-x-hidden overscroll-none font-sans antialiased`}>
         <NextTopLoader color='var(--primary)' showSpinner={false} />
+        <Suspense fallback={null}>
+          <ReferralTracker />
+        </Suspense>
         <NuqsAdapter>
           <ThemeProvider
             attribute='class'

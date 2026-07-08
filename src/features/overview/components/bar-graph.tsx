@@ -26,7 +26,7 @@ const chartConfig = {
 export function BarGraph({ data }: { data: CategoryChartItem[] }) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-col">
         <CardTitle className='flex items-center gap-2'>
           Sản phẩm theo danh mục
           <Badge variant='outline'>

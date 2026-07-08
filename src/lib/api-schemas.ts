@@ -31,3 +31,26 @@ export const supportRequestSchema = z.object({
 export const managedUploadDeleteSchema = z.object({
   url: z.string().trim().min(1, 'Thiếu đường dẫn ảnh cần xóa.')
 });
+
+export const blogMutationSchema = z.object({
+  title: z.string().trim().min(2, 'Tiêu đề cần ít nhất 2 ký tự.'),
+  slug: z.string().trim().min(2, 'Đường dẫn cần ít nhất 2 ký tự.'),
+  content: z.string().trim().min(10, 'Nội dung cần ít nhất 10 ký tự.'),
+  cover_url: z.string().trim().optional().or(z.literal('')),
+  is_published: z.boolean().default(false)
+});
+
+export const orderCreateSchema = z.object({
+  customer: z.object({
+    name: z.string().min(1, 'Họ và tên là bắt buộc'),
+    email: z.string().email('Email không hợp lệ'),
+    phone: z.string().min(1, 'Số điện thoại là bắt buộc'),
+    deliveryMethod: z.enum(['online', 'ship-code', 'ship-disk']),
+    shippingAddress: z.string().optional(),
+  }),
+  items: z.array(z.any()).min(1, 'Giỏ hàng không được để trống'),
+  total: z.number().min(0, 'Tổng tiền không hợp lệ'),
+  referral_code: z.string().optional().nullable(),
+  clerk_id: z.string().optional().nullable(),
+});
+

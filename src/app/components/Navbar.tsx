@@ -2,16 +2,118 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { ShoppingCart, Menu, X } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Package, Users } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import styles from "./components.module.css";
+import { useUser, useClerk } from "@clerk/nextjs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const mobileLinks = [
+const navLinks = [
   { href: "/cua-hang", label: "Cửa hàng" },
   { href: "/huong-dan", label: "Hướng dẫn" },
+  { href: "/tin-tuc", label: "Tin tức" },
   { href: "/#faq", label: "Hỏi đáp" },
-  { href: "/ho-tro", label: "Hỗ trợ" }
+  { href: "/ho-tro", label: "Hỗ trợ" },
 ];
+
+function UserMenu() {
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { signOut } = useClerk();
+
+  if (!isLoaded) return null;
+
+  if (!isSignedIn) {
+    return (
+      <Link
+        href="/auth/sign-in"
+        className={styles.navLink}
+        style={{ fontWeight: 600, fontSize: "0.9rem" }}
+      >
+        Đăng nhập
+      </Link>
+    );
+  }
+
+  const initials =
+    `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() ||
+    user.emailAddresses[0]?.emailAddress?.[0]?.toUpperCase() ||
+    "U";
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          aria-label="Menu tài khoản"
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <Avatar style={{ width: 36, height: 36 }}>
+            <AvatarImage src={user.imageUrl} alt={user.fullName ?? "Avatar"} />
+            <AvatarFallback
+              style={{
+                background: "var(--color-signal-blue, #2563eb)",
+                color: "#fff",
+                fontSize: "0.8rem",
+                fontWeight: 700,
+              }}
+            >
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" style={{ minWidth: 200 }}>
+        <DropdownMenuLabel>
+          <div style={{ fontWeight: 600 }}>{user.fullName || "Tài khoản"}</div>
+          <div style={{ fontSize: "0.75rem", fontWeight: 400, opacity: 0.7 }}>
+            {user.primaryEmailAddress?.emailAddress}
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/tai-khoan" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+            <User size={15} />
+            Tài khoản của tôi
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/tai-khoan/don-hang" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+            <Package size={15} />
+            Đơn hàng
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/tai-khoan/affiliate" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+            <Users size={15} />
+            Cộng tác viên
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => signOut({ redirectUrl: "/" })}
+          style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", color: "var(--destructive, #ef4444)" }}
+        >
+          <LogOut size={15} />
+          Đăng xuất
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export const Navbar: React.FC = () => {
   const { cartCount, setIsCartOpen } = useCart();
@@ -51,7 +153,7 @@ export const Navbar: React.FC = () => {
           </Link>
 
           <nav className={styles.navLinks}>
-            {mobileLinks.map((item) => (
+            {navLinks.map((item) => (
               <Link key={item.href} href={item.href} className={styles.navLink}>
                 {item.label}
               </Link>
@@ -63,6 +165,11 @@ export const Navbar: React.FC = () => {
               <ShoppingCart size={18} />
               {cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
             </button>
+
+            {/* User menu — visible on desktop */}
+            <div className="hidden md:flex">
+              <UserMenu />
+            </div>
 
             <Link
               href="/cua-hang"
@@ -83,6 +190,7 @@ export const Navbar: React.FC = () => {
         </div>
       </header>
 
+      {/* Mobile slide-in menu */}
       <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ""}`}>
         <div
           style={{
@@ -90,7 +198,7 @@ export const Navbar: React.FC = () => {
             justifyContent: "space-between",
             alignItems: "center",
             padding: "20px 24px",
-            borderBottom: "1px solid rgba(0, 0, 0, 0.05)"
+            borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
           }}
         >
           <Link className={styles.logo} href="/" onClick={() => setIsMobileMenuOpen(false)}>
@@ -101,7 +209,7 @@ export const Navbar: React.FC = () => {
               height="18"
               style={{ marginRight: "8px", fill: "var(--color-signal-blue)" }}
             >
-              <path d="M0 0h11v11H0zM12 0h11v11H12zM0 12h11v11H0zM12 12h11v11H12z" />
+              <path d="M0 0h11v11H0zM12 0h11v11H12zM0 12h11v11H12zM12 12h11v11H12z" />
             </svg>
             <span style={{ fontSize: "1.1rem", fontWeight: 750 }}>WinKey.vn</span>
           </Link>
@@ -114,7 +222,7 @@ export const Navbar: React.FC = () => {
         </div>
 
         <nav className={styles.mobileNavLinks}>
-          {mobileLinks.map((item) => (
+          {navLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -124,6 +232,12 @@ export const Navbar: React.FC = () => {
               {item.label}
             </Link>
           ))}
+
+          {/* Mobile user links */}
+          <div style={{ padding: "12px 24px 0", borderTop: "1px solid rgba(0,0,0,0.06)", marginTop: 8 }}>
+            <MobileUserSection onClose={() => setIsMobileMenuOpen(false)} />
+          </div>
+
           <Link
             href="/cua-hang"
             className="btn-grad"
@@ -137,3 +251,57 @@ export const Navbar: React.FC = () => {
     </>
   );
 };
+
+function MobileUserSection({ onClose }: { onClose: () => void }) {
+  const { isLoaded, isSignedIn } = useUser();
+  const { signOut } = useClerk();
+
+  if (!isLoaded) return null;
+
+  if (!isSignedIn) {
+    return (
+      <Link
+        href="/auth/sign-in"
+        className={styles.mobileNavLink}
+        onClick={onClose}
+        style={{ display: "block", paddingBottom: 8 }}
+      >
+        Đăng nhập
+      </Link>
+    );
+  }
+
+  return (
+    <>
+      <Link href="/tai-khoan" className={styles.mobileNavLink} onClick={onClose} style={{ display: "block" }}>
+        Tài khoản của tôi
+      </Link>
+      <Link href="/tai-khoan/don-hang" className={styles.mobileNavLink} onClick={onClose} style={{ display: "block" }}>
+        Đơn hàng
+      </Link>
+      <Link href="/tai-khoan/affiliate" className={styles.mobileNavLink} onClick={onClose} style={{ display: "block" }}>
+        Cộng tác viên
+      </Link>
+      <button
+        onClick={() => {
+          onClose();
+          signOut({ redirectUrl: "/" });
+        }}
+        style={{
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          color: "var(--destructive, #ef4444)",
+          fontSize: "0.9rem",
+          fontWeight: 600,
+          padding: "8px 0",
+          display: "block",
+          width: "100%",
+          textAlign: "left",
+        }}
+      >
+        Đăng xuất
+      </button>
+    </>
+  );
+}

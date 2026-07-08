@@ -14,6 +14,10 @@ import { categoryOptions } from '@/features/products/constants/product-options';
 import { productSchema, type ProductFormValues } from '@/features/products/schemas/product';
 import { createProductMutation, updateProductMutation } from '../api/mutations';
 import type { Product } from '../api/types';
+import dynamic from 'next/dynamic';
+import { Label } from '@/components/ui/label';
+
+const RichTextEditor = dynamic(() => import('@/components/rich-text-editor').then(mod => mod.RichTextEditor), { ssr: false });
 
 const MANAGED_UPLOAD_PREFIX = '/uploads/products/';
 
@@ -89,7 +93,7 @@ export default function ProductForm({
     }
   });
 
-  const { FormTextField, FormSelectField, FormTextareaField } = useFormFields<ProductFormValues>();
+  const { FormTextField, FormSelectField } = useFormFields<ProductFormValues>();
 
   async function deleteManagedImage(url: string) {
     const response = await fetch('/api/uploads/product-image', {
@@ -269,17 +273,28 @@ export default function ProductForm({
               )}
             </form.AppField>
 
-            <FormTextareaField
+            <form.AppField
               name='description'
-              label='Mô tả'
-              required
-              placeholder='Mô tả ngắn gọn về sản phẩm, đối tượng phù hợp và cách bàn giao key.'
-              maxLength={500}
-              rows={4}
               validators={{
-                onBlur: z.string().min(10, 'Mô tả cần ít nhất 10 ký tự.')
+                onChange: z.string().min(10, 'Mô tả cần ít nhất 10 ký tự.')
               }}
-            />
+            >
+              {(field) => (
+                <div className='space-y-2 col-span-1 md:col-span-2'>
+                  <Label htmlFor='description'>
+                    Mô tả <span className='text-destructive'>*</span>
+                  </Label>
+                  <RichTextEditor
+                    value={field.state.value}
+                    onChange={(val) => field.handleChange(val)}
+                    placeholder='Mô tả ngắn gọn về sản phẩm, đối tượng phù hợp và cách bàn giao key.'
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <p className='text-sm font-medium text-destructive'>{field.state.meta.errors.join(', ')}</p>
+                  )}
+                </div>
+              )}
+            </form.AppField>
 
             <div className='flex justify-end gap-2'>
               <Button type='button' variant='outline' onClick={() => router.back()}>
