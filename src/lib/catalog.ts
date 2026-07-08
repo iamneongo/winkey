@@ -1658,7 +1658,8 @@ export async function getOrdersPaginated(params: {
     `SELECT COUNT(*)::text AS count FROM orders o LEFT JOIN customers c ON o.customer_id = c.id ${where}`,
     values
   );
-  return { orders: result.rows, totalCount: Number(countResult.rows[0]?.count ?? 0) };
+  const total = Number(countResult.rows[0]?.count ?? 0);
+  return { orders: result.rows, total, totalPages: Math.ceil(total / limit) };
 }
 
 export async function getOrderById(id: number) {
