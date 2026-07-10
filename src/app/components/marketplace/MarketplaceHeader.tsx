@@ -3,7 +3,7 @@
 import Link from "next/link";
 import React, { useState } from "react";
 import { Search, ShoppingCart, Bell, User, LockKeyhole } from "lucide-react";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../../context/CartContext";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {

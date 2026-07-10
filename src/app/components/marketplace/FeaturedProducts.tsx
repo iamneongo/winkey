@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Star, ShoppingCart } from "lucide-react";
-import { Product, useCart } from "../context/CartContext";
+import { Product, useCart } from "../../context/CartContext";
 
 interface FeaturedProductsProps {
   products: Product[];

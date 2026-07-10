@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { ShieldCheck, LockKeyhole, Zap, Headset, ShoppingCart } from "lucide-react";
+import { ShieldCheck, LockKeyhole, Zap, Headset, ShoppingCart, Music } from "lucide-react";
+import Image from "next/image";
 
 export function MarketplaceHero() {
   return (
@@ -70,24 +71,15 @@ export function MarketplaceHero() {
         <div className="relative w-full max-w-[320px] aspect-square hidden md:flex items-center justify-center perspective-1000">
           <div className="absolute inset-0 bg-gradient-to-tr from-blue-200/40 to-transparent rounded-full blur-2xl"></div>
           
-          {/* Main Shopping Cart Graphic mock */}
-          <div className="relative z-10 w-full h-full animate-float">
-             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-white/50 backdrop-blur-sm border-2 border-white rounded-3xl shadow-xl flex items-center justify-center transform rotate-y-12 rotate-x-12">
-                <ShoppingCart className="w-24 h-24 text-blue-500 opacity-80" strokeWidth={1} />
-             </div>
-             {/* Floating App Icons */}
-             <div className="absolute top-[20%] left-[10%] w-16 h-16 bg-red-500 rounded-2xl shadow-lg border-2 border-white/80 flex items-center justify-center transform -rotate-12 animate-bounce-slow">
-                <span className="text-white font-black text-2xl">A</span>
-             </div>
-             <div className="absolute top-[10%] right-[15%] w-14 h-14 bg-sky-500 rounded-2xl shadow-lg border-2 border-white/80 flex items-center justify-center transform rotate-12 animate-bounce-slow" style={{ animationDelay: '1s' }}>
-                <span className="text-white font-black text-xl">W</span>
-             </div>
-             <div className="absolute bottom-[25%] left-[5%] w-12 h-12 bg-blue-600 rounded-xl shadow-lg border-2 border-white/80 flex items-center justify-center transform -rotate-6 animate-bounce-slow" style={{ animationDelay: '0.5s' }}>
-                <span className="text-white font-black text-lg">AI</span>
-             </div>
-             <div className="absolute bottom-[30%] right-[5%] w-16 h-16 bg-purple-500 rounded-2xl shadow-lg border-2 border-white/80 flex items-center justify-center transform rotate-6 animate-bounce-slow" style={{ animationDelay: '1.5s' }}>
-                <Music className="text-white w-8 h-8" />
-             </div>
+          {/* Real Generated 3D Illustration */}
+          <div className="relative z-10 w-[120%] h-[120%] ml-8 animate-float">
+             <Image
+                src="/images/hero-illustration.png"
+                alt="Digital Marketplace Assets"
+                fill
+                className="object-contain drop-shadow-2xl"
+                priority
+             />
           </div>
         </div>
       </div>

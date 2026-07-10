@@ -11,6 +11,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Suspense } from 'react';
 import { ReferralTracker } from './components/ReferralTracker';
 import '../styles/globals.css';
+import Script from 'next/script';
 
 const geistSans = Geist({
   subsets: ['latin'],
@@ -71,7 +72,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang='vi' suppressHydrationWarning data-theme={themeToApply}>
       <head>
-        <script
+        <Script
+          id="theme-color-script"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               try {
