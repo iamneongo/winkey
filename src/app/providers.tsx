@@ -2,7 +2,7 @@
 
 import React from "react";
 import { CartProvider } from "./context/CartContext";
-import { Navbar } from "./components/Navbar";
+import { MarketplaceHeader } from "./components/marketplace/MarketplaceHeader";
 import { CartDrawer } from "./components/CartDrawer";
 import { Footer } from "./components/Footer";
 
@@ -14,7 +14,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <div className="bg-glow-2" />
 
       {/* Global Navbar */}
-      <Navbar />
+      <MarketplaceHeader />
 
       {/* Page content */}
       <main style={{ flexGrow: 1, minHeight: "80vh" }}>
