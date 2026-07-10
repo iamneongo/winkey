@@ -1,4 +1,5 @@
 import {
+  Arimo,
   Architects_Daughter,
   DM_Sans,
   Fira_Code,
@@ -17,8 +18,8 @@ import {
 
 import { cn } from '@/lib/utils';
 
-const fontSans = Geist({
-  subsets: ['latin'],
+const fontSans = Arimo({
+  subsets: ['latin', 'vietnamese'],
   variable: '--font-sans'
 });
 

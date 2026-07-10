@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 export interface Product {
   id: string;
@@ -8,10 +8,12 @@ export interface Product {
   price: number;
   originalPrice: number;
   image: string;
-  category: "windows" | "office" | "combo";
+  category: "windows" | "office" | "combo" | string;
   tag?: string;
   rating: number;
   reviewsCount: number;
+  reviews_count?: number;
+  description?: string;
   features: string[];
   activationDuration?: "lifetime" | "yearly";
   renewalReminder?: boolean;
@@ -38,27 +40,22 @@ interface CartContextType {
 const CART_STORAGE_KEY = "win_keys_cart";
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-function getInitialCart(): CartItem[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  const savedCart = window.localStorage.getItem(CART_STORAGE_KEY);
-  if (!savedCart) {
-    return [];
-  }
-
-  try {
-    return JSON.parse(savedCart) as CartItem[];
-  } catch (error) {
-    console.error("Failed to load cart", error);
-    return [];
-  }
-}
-
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<CartItem[]>(getInitialCart);
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedCart = window.localStorage.getItem(CART_STORAGE_KEY);
+      if (savedCart) {
+        try {
+          setCart(JSON.parse(savedCart));
+        } catch (e) {
+          console.error("Failed to parse cart", e);
+        }
+      }
+    }
+  }, []);
 
   const saveCart = (newCart: CartItem[]) => {
     setCart(newCart);

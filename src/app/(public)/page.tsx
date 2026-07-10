@@ -4,7 +4,6 @@ import { MarketplaceSidebar } from "../components/marketplace/MarketplaceSidebar
 import { MarketplaceHero } from "../components/marketplace/MarketplaceHero";
 import { FeaturedCategories } from "../components/marketplace/FeaturedCategories";
 import { FeaturedProducts } from "../components/marketplace/FeaturedProducts";
-import { MarketplaceTrustBadges } from "../components/marketplace/MarketplaceTrustBadges";
 import { MarketplaceRightPanel } from "../components/marketplace/MarketplaceRightPanel";
 
 export default async function Home() {
@@ -21,7 +20,6 @@ export default async function Home() {
           <MarketplaceHero />
           <FeaturedCategories />
           <FeaturedProducts products={products} />
-          <MarketplaceTrustBadges />
         </div>
 
         {/* Right Sidebar */}

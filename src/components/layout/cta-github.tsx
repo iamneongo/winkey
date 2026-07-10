@@ -10,7 +10,7 @@ export default function CtaGithub() {
         target='_blank'
         className='dark:text-foreground transition-colors duration-300 hover:text-[#24292e] dark:hover:text-yellow-400'
       >
-        <Icons.github className='transition-transform duration-300 group-hover:animate-bounce' />
+        <Icons.github className='transition-transform duration-300 group-hover:-translate-y-1' />
       </a>
     </Button>
   );

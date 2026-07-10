@@ -142,12 +142,12 @@ export const Navbar: React.FC = () => {
           <Link className={styles.logo} href="/">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 23 23"
-              width="18"
-              height="18"
-              style={{ marginRight: "8px", fill: "var(--color-signal-blue)" }}
+              viewBox="0 0 88 88"
+              width="24"
+              height="24"
+              style={{ marginRight: "8px", fill: "#00a4ef" }}
             >
-              <path d="M0 0h11v11H0zM12 0h11v11H12zM0 12h11v11H0zM12 12h11v11H12z" />
+              <path d="M0 12.402l35.687-4.86.016 34.423h-35.703v-29.563zm39.866-5.495l48.134-6.907v40.366h-48.134v-33.459zm0 41.01h48.134v40.354l-48.134-6.914v-33.44zm-39.866 1.439h35.703v29.585l-35.703-4.856v-24.729z" />
             </svg>
             <span style={{ fontSize: "1.15rem", fontWeight: 700, letterSpacing: "-0.5px" }}>WinKey.vn</span>
           </Link>

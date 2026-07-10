@@ -17,46 +17,46 @@ import {
 
 export function MarketplaceRightPanel() {
   return (
-    <aside className="w-72 flex-shrink-0 hidden lg:flex flex-col gap-6">
+    <aside className="w-72 flex-shrink-0 hidden lg:flex flex-col gap-6 sticky top-28 self-start max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-hide pb-6">
       
-      {/* Tại sao chọn WinKey AI? */}
+      {/* Tại sao chọn WinKey? */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-        <h3 className="font-bold text-[15px] text-gray-900 mb-4">Tại sao chọn WinKey AI?</h3>
+        <h3 className="font-bold text-[15px] text-gray-900 mb-4">Tại sao chọn WinKey.vn?</h3>
         <ul className="space-y-4">
           <li className="flex gap-3">
             <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center flex-shrink-0">
-              <Hexagon className="w-4 h-4 text-purple-600" />
+              <BadgeCheck className="w-4 h-4 text-purple-600" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-gray-900 leading-none mb-1">Kho tài sản số phong phú</h4>
-              <p className="text-xs text-gray-500 font-medium leading-snug">Hàng triệu tài nguyên chất lượng</p>
+              <h4 className="text-sm font-bold text-gray-900 leading-none mb-1">Sản phẩm chính hãng 100%</h4>
+              <p className="text-xs text-gray-500 font-medium leading-snug">Kích hoạt online, bảo hành vĩnh viễn</p>
             </div>
           </li>
           <li className="flex gap-3">
             <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
-              <BadgeCheck className="w-4 h-4 text-emerald-600" />
+              <Hexagon className="w-4 h-4 text-emerald-600" />
             </div>
             <div>
               <h4 className="text-sm font-bold text-gray-900 leading-none mb-1">Giá tốt nhất thị trường</h4>
-              <p className="text-xs text-gray-500 font-medium leading-snug">Cạnh tranh - minh bạch</p>
+              <p className="text-xs text-gray-500 font-medium leading-snug">Tiết kiệm chi phí lên đến 80%</p>
             </div>
           </li>
           <li className="flex gap-3">
             <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-              <FileBadge2 className="w-4 h-4 text-blue-600" />
+              <Send className="w-4 h-4 text-blue-600" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-gray-900 leading-none mb-1">Cấp phép rõ ràng</h4>
-              <p className="text-xs text-gray-500 font-medium leading-snug">Đúng phạm vi - đúng mục đích</p>
+              <h4 className="text-sm font-bold text-gray-900 leading-none mb-1">Giao hàng tự động 24/7</h4>
+              <p className="text-xs text-gray-500 font-medium leading-snug">Nhận key qua email chỉ sau 1 phút</p>
             </div>
           </li>
           <li className="flex gap-3">
             <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
-              <Cpu className="w-4 h-4 text-green-600" />
+              <FileBadge2 className="w-4 h-4 text-green-600" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-gray-900 leading-none mb-1">Công cụ AI thông minh</h4>
-              <p className="text-xs text-gray-500 font-medium leading-snug">Hỗ trợ sáng tạo & tối ưu hiệu quả</p>
+              <h4 className="text-sm font-bold text-gray-900 leading-none mb-1">Thanh toán linh hoạt</h4>
+              <p className="text-xs text-gray-500 font-medium leading-snug">An toàn, bảo mật thông tin tuyệt đối</p>
             </div>
           </li>
           <li className="flex gap-3">
@@ -64,8 +64,8 @@ export function MarketplaceRightPanel() {
               <Clock className="w-4 h-4 text-indigo-600" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-gray-900 leading-none mb-1">Hỗ trợ tận tâm 24/7</h4>
-              <p className="text-xs text-gray-500 font-medium leading-snug">Đội ngũ chuyên nghiệp</p>
+              <h4 className="text-sm font-bold text-gray-900 leading-none mb-1">Hỗ trợ kỹ thuật trọn đời</h4>
+              <p className="text-xs text-gray-500 font-medium leading-snug">Đội ngũ IT chuyên môn cao, tận tâm</p>
             </div>
           </li>
         </ul>
@@ -78,7 +78,7 @@ export function MarketplaceRightPanel() {
             <div className="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center shadow-sm">
               <Bot className="w-4 h-4 text-white" />
             </div>
-            <h3 className="font-bold text-sm text-gray-900">AI Assistant</h3>
+            <h3 className="font-bold text-sm text-gray-900">CSKH WinKey</h3>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
@@ -89,12 +89,12 @@ export function MarketplaceRightPanel() {
         <div className="p-4 flex-1">
           <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm p-3 mb-4 shadow-sm inline-block max-w-[90%]">
             <p className="text-xs text-gray-800 font-medium leading-relaxed">
-              Xin chào! Tôi có thể giúp gì cho bạn hôm nay? 😊
+              Xin chào! WinKey có thể hỗ trợ gì cho bạn hôm nay? 😊
             </p>
           </div>
           
           <div className="flex flex-col gap-2 mb-4">
-            {["Tư vấn sản phẩm", "Hướng dẫn mua hàng", "Tìm nhạc bản quyền", "Dịch vụ Digital Marketing"].map((suggestion, i) => (
+            {["Tư vấn Windows/Office", "Hướng dẫn cài đặt", "Chính sách bảo hành", "Kiểm tra đơn hàng"].map((suggestion, i) => (
               <button key={i} className="text-left w-fit px-3 py-1.5 bg-blue-50/80 hover:bg-blue-100 border border-blue-100 text-blue-700 text-xs font-semibold rounded-full transition-colors flex items-center gap-1.5 before:content-['@'] before:opacity-50">
                 {suggestion}
               </button>
@@ -123,7 +123,7 @@ export function MarketplaceRightPanel() {
               <User className="w-4 h-4" />
             </div>
             <div>
-              <div className="font-bold text-sm text-gray-900 leading-none mb-1">128.560+</div>
+              <div className="font-bold text-sm text-gray-900 leading-none mb-1">50.000+</div>
               <div className="text-xs text-gray-500 font-medium leading-none">Khách hàng</div>
             </div>
           </li>
@@ -132,8 +132,8 @@ export function MarketplaceRightPanel() {
               <Package className="w-4 h-4" />
             </div>
             <div>
-              <div className="font-bold text-sm text-gray-900 leading-none mb-1">45.230+</div>
-              <div className="text-xs text-gray-500 font-medium leading-none">Sản phẩm</div>
+              <div className="font-bold text-sm text-gray-900 leading-none mb-1">500+</div>
+              <div className="text-xs text-gray-500 font-medium leading-none">Sản phẩm phần mềm</div>
             </div>
           </li>
           <li className="flex items-center gap-3">
@@ -141,8 +141,8 @@ export function MarketplaceRightPanel() {
               <ShoppingBag className="w-4 h-4" />
             </div>
             <div>
-              <div className="font-bold text-sm text-gray-900 leading-none mb-1">352.120+</div>
-              <div className="text-xs text-gray-500 font-medium leading-none">Đơn hàng</div>
+              <div className="font-bold text-sm text-gray-900 leading-none mb-1">125.000+</div>
+              <div className="text-xs text-gray-500 font-medium leading-none">Đơn hàng hoàn thành</div>
             </div>
           </li>
           <li className="flex items-center gap-3">
@@ -150,8 +150,8 @@ export function MarketplaceRightPanel() {
               <Star className="w-4 h-4 fill-current" />
             </div>
             <div>
-              <div className="font-bold text-sm text-gray-900 leading-none mb-1">98.5%</div>
-              <div className="text-xs text-gray-500 font-medium leading-none">Đánh giá tích cực</div>
+              <div className="font-bold text-sm text-gray-900 leading-none mb-1">99.8%</div>
+              <div className="text-xs text-gray-500 font-medium leading-none">Đánh giá 5 sao</div>
             </div>
           </li>
         </ul>

@@ -97,7 +97,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
                      <div className="flex items-center gap-1">
                         <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                         <span className="text-[11px] font-bold text-gray-700">{product.rating || "5.0"}</span>
-                        <span className="text-[11px] text-gray-400">({product.reviews_count || Math.floor(Math.random() * 200) + 50})</span>
+                        <span className="text-[11px] text-gray-400">({product.reviewsCount || product.reviews_count || 128})</span>
                      </div>
                      <button 
                         onClick={() => addToCart(product)}

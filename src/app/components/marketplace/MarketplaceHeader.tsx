@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Search, ShoppingCart, Bell, User, LockKeyhole } from "lucide-react";
 import { useCart } from "../../context/CartContext";
 import { useUser, useClerk } from "@clerk/nextjs";
@@ -106,19 +106,26 @@ function UserMenu() {
 export function MarketplaceHeader() {
   const { cartCount, setIsCartOpen } = useCart();
   const [searchFocused, setSearchFocused] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-6">
         
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-sm">
-            <LockKeyhole className="text-white w-6 h-6" />
+        <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
+          <div className="w-10 h-10 flex items-center justify-center transition-transform group-hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width="32" height="32" className="text-[#00a4ef]">
+              <path fill="currentColor" d="M0 12.402l35.687-4.86.016 34.423h-35.703v-29.563zm39.866-5.495l48.134-6.907v40.366h-48.134v-33.459zm0 41.01h48.134v40.354l-48.134-6.914v-33.44zm-39.866 1.439h35.703v29.585l-35.703-4.856v-24.729z" />
+            </svg>
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-black text-gray-900 leading-tight tracking-tight">WinKey <span className="text-blue-600">AI</span></span>
-            <span className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.1em] mt-[-2px]">Digital Marketplace</span>
+            <span className="text-xl font-black text-gray-900 leading-tight tracking-tight">WinKey</span>
+            <span className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.1em] mt-[-2px]">Bản quyền & Phần mềm</span>
           </div>
         </Link>
 
@@ -140,7 +147,7 @@ export function MarketplaceHeader() {
             <Link 
               key={idx} 
               href={item.href} 
-              className={`text-[13px] font-bold transition-colors hover:text-blue-600 ${idx === 0 ? 'text-blue-600 relative after:absolute after:bottom-[-29px] after:left-0 after:w-full after:h-[3px] after:bg-blue-600 after:rounded-t-md' : 'text-gray-700'}`}
+              className={`text-[13px] font-bold transition-colors hover:text-blue-600 ${idx === 0 ? 'text-blue-600 relative after:absolute after:bottom-[-29px] after:left-0 after:w-full after:h-[3px] after:bg-blue-600 after:rounded-t-md' : 'text-slate-700'}`}
             >
               {item.label}
             </Link>
@@ -155,7 +162,7 @@ export function MarketplaceHeader() {
             aria-label="Giỏ hàng"
           >
             <ShoppingCart className="w-[22px] h-[22px]" strokeWidth={2.5} />
-            {cartCount > 0 && (
+            {isMounted && cartCount > 0 && (
               <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
                 {cartCount > 9 ? "9+" : cartCount}
               </span>

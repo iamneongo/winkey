@@ -3,7 +3,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { DEFAULT_THEME, THEMES } from '@/components/themes/theme.config';
 import ThemeProvider from '@/components/themes/theme-provider';
 import { isClerkConfigured } from '@/lib/clerk-env';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Arimo, Geist_Mono } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import NextTopLoader from 'nextjs-toploader';
@@ -13,14 +13,16 @@ import { ReferralTracker } from './components/ReferralTracker';
 import '../styles/globals.css';
 import Script from 'next/script';
 
-const geistSans = Geist({
-  subsets: ['latin'],
-  variable: '--font-sans'
+const arimo = Arimo({
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-sans',
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
   subsets: ['latin'],
-  variable: '--font-mono'
+  variable: '--font-mono',
+  display: 'swap',
 });
 
 const META_THEME_COLORS = {
@@ -86,7 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           }}
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} bg-background overflow-x-hidden overscroll-none font-sans antialiased`}>
+      <body className={`${arimo.variable} ${geistMono.variable} bg-background overflow-x-hidden overscroll-none font-sans antialiased`}>
         <NextTopLoader color='var(--primary)' showSpinner={false} />
         <Suspense fallback={null}>
           <ReferralTracker />

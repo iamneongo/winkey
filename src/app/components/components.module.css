@@ -884,19 +884,27 @@
 }
 
 .faqContent {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
-  padding: 0 24px;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   color: var(--color-ash);
   font-size: 0.85rem;
   line-height: 1.6;
 }
 
+.faqContent > p {
+  overflow: hidden;
+  padding: 0 24px;
+  margin: 0;
+}
+
 .faqContentOpen {
-  max-height: 200px;
-  padding: 0 24px 18px 24px;
+  grid-template-rows: 1fr;
   border-top: 1px solid var(--border-color);
+}
+
+.faqContentOpen > p {
+  padding: 12px 24px 18px 24px;
 }
 
 /* Testimonials */

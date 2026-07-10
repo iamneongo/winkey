@@ -121,7 +121,7 @@ export default async function AffiliatePage(props: {
             <CardTitle className="text-sm text-gray-500 font-medium">Tổng đã rút</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{formatCurrency(totalPaid)}</div>
+            <div className="text-2xl font-bold text-slate-800">{formatCurrency(totalPaid)}</div>
           </CardContent>
         </Card>
       </div>

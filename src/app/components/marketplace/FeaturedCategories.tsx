@@ -9,37 +9,37 @@ const featuredCategories = [
   { 
     name: "Phần mềm bản quyền", 
     count: "2.350+", 
-    icon: "/products/windows-11-pro.svg",
+    icon: "https://thesvg.org/icons/windows/default.svg",
     bg: "bg-blue-50"
   },
   { 
     name: "Âm nhạc bản quyền", 
     count: "15.000+", 
-    icon: "https://upload.wikimedia.org/wikipedia/commons/2/23/Apple_Music_logo.svg", // Mock icon
+    icon: "https://thesvg.org/icons/apple-music/default.svg",
     bg: "bg-pink-50"
   },
   { 
     name: "Video & Stock Media", 
     count: "8.500+", 
-    icon: "https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg", // Mock icon
+    icon: "https://thesvg.org/icons/youtube/default.svg",
     bg: "bg-purple-50"
   },
   { 
     name: "AI Tools", 
     count: "1.200+", 
-    icon: "https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg", // Mock icon
+    icon: "https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg",
     bg: "bg-emerald-50"
   },
   { 
     name: "Digital Marketing", 
     count: "2.000+", 
-    icon: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Google_Ads_logo.svg", // Mock icon
+    icon: "https://thesvg.org/icons/google-ads/default.svg",
     bg: "bg-orange-50"
   },
   { 
     name: "Website & Hosting", 
     count: "1.500+", 
-    icon: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg", // Mock icon
+    icon: "https://thesvg.org/icons/github/default.svg",
     bg: "bg-sky-50"
   }
 ];

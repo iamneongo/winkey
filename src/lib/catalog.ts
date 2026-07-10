@@ -115,12 +115,12 @@ type BlogRow = {
 };
 
 const productPhotoMap: Record<string, string> = {
-  win11pro: '/products/windows-11-pro.svg',
-  win11home: '/products/windows-11-home.svg',
-  win10pro: '/products/windows-10-pro.svg',
-  office2021: '/products/office-2021-pro-plus.svg',
-  office365: '/products/microsoft-365-personal.svg',
-  'combo-pro': '/products/combo-windows-office.svg'
+  win11pro: 'https://thesvg.org/icons/windows/default.svg',
+  win11home: 'https://thesvg.org/icons/windows/default.svg',
+  win10pro: 'https://thesvg.org/icons/windows/default.svg',
+  office2021: 'https://thesvg.org/icons/microsoft-office/default.svg',
+  office365: 'https://thesvg.org/icons/microsoft-365/default.svg',
+  'combo-pro': 'https://thesvg.org/icons/microsoft/default.svg'
 };
 
 const seedProducts = [
