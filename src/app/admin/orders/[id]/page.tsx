@@ -112,12 +112,34 @@ export default async function AdminOrderDetailPage(props: {
             <CardContent className="space-y-2 text-sm">
               <div>
                 <span className="text-gray-500">Họ tên:</span>{' '}
-                <span className="font-medium">{order.first_name} {order.last_name}</span>
+                <span className="font-medium">{order.customer_name || 'Chưa có tên'}</span>
               </div>
               <div>
                 <span className="text-gray-500">Email:</span>{' '}
                 <span className="font-medium">{order.customer_email || order.email}</span>
               </div>
+              <div>
+                <span className="text-gray-500">Điện thoại:</span>{' '}
+                <span className="font-medium">{order.customer_phone || '—'}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Hình thức nhận:</span>{' '}
+                <span className="font-medium">
+                  {order.delivery_method === 'online'
+                    ? 'Kích hoạt online'
+                    : order.delivery_method === 'ship-code'
+                      ? 'Ship mã bản quyền'
+                      : order.delivery_method === 'ship-disk'
+                        ? 'Ship đĩa cứng'
+                        : '—'}
+                </span>
+              </div>
+              {order.shipping_address && (
+                <div>
+                  <span className="text-gray-500">Địa chỉ:</span>{' '}
+                  <span className="font-medium break-words">{order.shipping_address}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
 

@@ -8,10 +8,12 @@ import styles from './components.module.css';
 
 interface ProductCardProps {
   product: Product;
+  variant?: 'full' | 'compact';
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'full' }) => {
   const { addToCart } = useCart();
+  const isCompact = variant === 'compact';
 
   const formatPrice = (num: number) =>
     new Intl.NumberFormat('vi-VN', {
@@ -21,16 +23,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }).format(num);
 
   return (
-    <div
-      className={`glass ${styles.prodCard}`}
-      style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}
-    >
+    <article className={`glass ${styles.prodCard} group flex flex-col gap-4 overflow-hidden p-4 sm:p-5`}>
       <div
         style={{
           position: 'relative',
           aspectRatio: '16 / 10',
           overflow: 'hidden',
-          borderRadius: '18px',
+          borderRadius: '14px',
           background: 'linear-gradient(135deg, rgba(20,90,255,0.08), rgba(0,0,0,0.02)), #ffffff',
           border: '1px solid rgba(0, 0, 0, 0.06)'
         }}
@@ -39,8 +38,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           src={product.image}
           alt={product.name}
           fill
-          sizes='(max-width: 768px) 100vw, 33vw'
-          className='object-cover'
+          sizes={
+            isCompact
+              ? '(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 220px'
+              : '(max-width: 640px) 90vw, (max-width: 1400px) 45vw, (max-width: 1600px) 30vw, 240px'
+          }
+          className='object-cover transition-transform duration-500 ease-out group-hover:scale-[1.025] motion-reduce:transition-none'
         />
         {product.tag && (
           <div
@@ -98,7 +101,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </div>
 
       <div>
-        <h3 className={styles.cardTitle} style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '6px' }}>
+        <h3
+          className={`${styles.cardTitle} line-clamp-2`}
+          style={{ fontSize: isCompact ? '1rem' : '1.2rem', fontWeight: 800, marginBottom: '6px' }}
+        >
           {product.name}
         </h3>
 
@@ -119,24 +125,34 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
       </div>
 
-      <ul className={styles.featureList} style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: 0, padding: 0 }}>
-        {product.features.map((feature) => (
-          <li
-            key={feature}
-            className={styles.featureItem}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', listStyle: 'none' }}
-          >
-            <Check size={14} style={{ color: 'var(--color-signal-blue)', flexShrink: 0 }} />
-            <span style={{ fontSize: '0.8rem', color: 'var(--color-ash)' }}>{feature}</span>
-          </li>
-        ))}
-      </ul>
+      {!isCompact && (
+        <ul className={styles.featureList} style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: 0, padding: 0 }}>
+          {product.features.map((feature) => (
+            <li
+              key={feature}
+              className={styles.featureItem}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', listStyle: 'none' }}
+            >
+              <Check size={14} style={{ color: 'var(--color-signal-blue)', flexShrink: 0 }} />
+              <span style={{ fontSize: '0.8rem', color: 'var(--color-ash)' }}>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(0, 0, 0, 0.06)', paddingTop: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '16px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            flexWrap: 'wrap',
+            gap: '8px',
+            marginBottom: isCompact ? '12px' : '16px'
+          }}
+        >
           <span
             style={{
-              fontSize: '1.45rem',
+              fontSize: isCompact ? '1.1rem' : '1.45rem',
               fontWeight: 700,
               color: 'var(--color-signal-blue)',
               letterSpacing: '-0.5px'
@@ -149,26 +165,38 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </span>
         </div>
 
-        <button
-          className='btn-grad'
-          onClick={() => addToCart(product)}
-          style={{
-            width: '100%',
-            padding: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            fontSize: '0.85rem',
-            textTransform: 'none',
-            letterSpacing: '0',
-            fontWeight: 600
-          }}
-        >
-          <ShoppingCart size={16} />
-          <span>Thêm vào giỏ hàng</span>
-        </button>
+        {isCompact ? (
+          <button
+            type='button'
+            aria-label={`Thêm ${product.name} vào giỏ hàng`}
+            className='flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+            onClick={() => addToCart(product)}
+          >
+            <ShoppingCart size={15} aria-hidden='true' />
+            <span>Thêm vào giỏ</span>
+          </button>
+        ) : (
+          <button
+            className='btn-grad'
+            onClick={() => addToCart(product)}
+            style={{
+              width: '100%',
+              padding: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              fontSize: '0.85rem',
+              textTransform: 'none',
+              letterSpacing: '0',
+              fontWeight: 600
+            }}
+          >
+            <ShoppingCart size={16} />
+            <span>Thêm vào giỏ hàng</span>
+          </button>
+        )}
       </div>
-    </div>
+    </article>
   );
 };

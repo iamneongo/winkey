@@ -692,6 +692,22 @@ export async function ensureDatabaseReady() {
     await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'pending'`);
     await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ`);
     await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS license_key_id INTEGER`);
+    // Store the recipient details on each order. Customer records are mutable
+    // profile data and must not rewrite the historical details of older orders.
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT`);
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email TEXT`);
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone TEXT`);
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_method TEXT`);
+    await db.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_address TEXT`);
+    await db.query(`
+      UPDATE orders o
+      SET customer_name = NULLIF(TRIM(CONCAT_WS(' ', c.first_name, c.last_name)), ''),
+          customer_email = c.email,
+          customer_phone = c.phone
+      FROM customers c
+      WHERE o.customer_id = c.id
+        AND (o.customer_name IS NULL OR o.customer_email IS NULL)
+    `);
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS payment_transactions (
@@ -1643,10 +1659,19 @@ export async function getOrdersPaginated(params: {
   const values: unknown[] = [];
   let idx = 1;
   if (status) { conditions.push(`o.payment_status = $${idx++}`); values.push(status); }
-  if (query) { conditions.push(`(c.email ILIKE $${idx} OR o.id::text = $${idx})`); values.push(`%${query}%`); idx++; }
+  if (query) {
+    conditions.push(
+      `(COALESCE(o.customer_email, c.email) ILIKE $${idx} OR COALESCE(o.customer_name, CONCAT_WS(' ', c.first_name, c.last_name)) ILIKE $${idx} OR o.id::text = $${idx})`
+    );
+    values.push(`%${query}%`);
+    idx++;
+  }
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
   const result = await db.query(
-    `SELECT o.*, c.email as customer_email, c.first_name, c.last_name
+    `SELECT o.*,
+       COALESCE(o.customer_email, c.email) AS customer_email,
+       COALESCE(o.customer_name, NULLIF(TRIM(CONCAT_WS(' ', c.first_name, c.last_name)), '')) AS customer_name,
+       COALESCE(o.customer_phone, c.phone) AS customer_phone
      FROM orders o
      LEFT JOIN customers c ON o.customer_id = c.id
      ${where}
@@ -1667,7 +1692,9 @@ export async function getOrderById(id: number) {
   await ensureDatabaseReady();
   const result = await db.query(
     `SELECT o.*,
-       c.email as customer_email, c.first_name, c.last_name, c.phone,
+       COALESCE(o.customer_email, c.email) AS customer_email,
+       COALESCE(o.customer_name, NULLIF(TRIM(CONCAT_WS(' ', c.first_name, c.last_name)), '')) AS customer_name,
+       COALESCE(o.customer_phone, c.phone) AS customer_phone,
        lk.key_value as license_key,
        a.referral_code, a.commission_rate
      FROM orders o

@@ -146,7 +146,10 @@ export function FileUploader(props: FileUploaderProps) {
             setFiles([]);
             return `${target} uploaded`;
           },
-          error: `Failed to upload ${target}`
+          error: (error) =>
+            error instanceof Error && error.message
+              ? error.message
+              : `Failed to upload ${target}`
         });
       }
     },

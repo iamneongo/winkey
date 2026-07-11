@@ -23,7 +23,7 @@ export const Footer: React.FC = () => {
     <footer id="support" className={styles.footer}>
       <div className={styles.container}>
         <div className={styles.footerGrid}>
-          <div className={styles.footerCol} style={{ gridColumn: "span 2" }}>
+          <div className={`${styles.footerCol} ${styles.footerColWide}`}>
             <div className={styles.footerLogo}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"

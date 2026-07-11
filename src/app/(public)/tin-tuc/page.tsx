@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { getBlogs } from "@/lib/catalog";
 import styles from "../../components/components.module.css";
 import { ArrowRight, CalendarDays } from "lucide-react";
@@ -37,19 +36,21 @@ export default async function NewsPage() {
             <p className="text-lg text-[var(--color-slate-gray)]">Hiện tại chưa có bài viết nào.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {blogs.map((blog) => (
-              <Link 
-                href={`/tin-tuc/${blog.slug}`} 
+              <Link
+                href={`/tin-tuc/${blog.slug}`}
                 key={blog.id}
                 className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100"
               >
-                <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-gray-100">
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-gray-100">
                   {blog.cover_url ? (
-                    <img 
-                      src={blog.cover_url} 
-                      alt={blog.title} 
-                      className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105" 
+                    <img
+                      src={blog.cover_url}
+                      alt={blog.title}
+                      loading="lazy"
+                      decoding="async"
+                      className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -57,16 +58,16 @@ export default async function NewsPage() {
                     </div>
                   )}
                 </div>
-                <div className="p-6 flex flex-col flex-1">
+                <div className="p-5 flex flex-col flex-1">
                   <div className="flex items-center text-sm text-[var(--color-slate-gray)] mb-3">
-                    <CalendarDays size={14} className="mr-2" />
+                    <CalendarDays size={14} className="mr-2 shrink-0" />
                     {formatDate(blog.created_at)}
                   </div>
-                  <h2 className="text-lg font-bold leading-snug text-[var(--color-midnight-ink)] mb-3 line-clamp-3 group-hover:text-[var(--color-signal-blue)] transition-colors">
+                  <h2 className="text-base font-bold leading-snug text-[var(--color-midnight-ink)] mb-3 line-clamp-2 group-hover:text-[var(--color-signal-blue)] transition-colors">
                     {blog.title}
                   </h2>
                   <div className="mt-auto pt-4 flex items-center text-sm font-semibold text-[var(--color-signal-blue)]">
-                    Đọc tiếp <ArrowRight size={16} className="ml-1" />
+                    Đọc tiếp <ArrowRight size={16} className="ml-1 shrink-0" />
                   </div>
                 </div>
               </Link>

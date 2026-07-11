@@ -41,10 +41,6 @@ export async function POST(req: Request) {
 
       if (clerkRows.length > 0) {
         customerId = clerkRows[0].id;
-        await db.query(
-          `UPDATE customers SET first_name = $1, last_name = $2, email = $3, updated_at = NOW() WHERE id = $4`,
-          [firstName, lastName, email, customerId]
-        );
       } else {
         // clerk_id not found, check by email
         const { rows: emailRows } = await db.query<{ id: number }>(
@@ -54,8 +50,8 @@ export async function POST(req: Request) {
         if (emailRows.length > 0) {
           customerId = emailRows[0].id;
           await db.query(
-            `UPDATE customers SET clerk_id = $1, first_name = $2, last_name = $3, updated_at = NOW() WHERE id = $4`,
-            [clerk_id, firstName, lastName, customerId]
+            `UPDATE customers SET clerk_id = $1, updated_at = NOW() WHERE id = $2`,
+            [clerk_id, customerId]
           );
         } else {
           // Neither found, create new
@@ -75,10 +71,6 @@ export async function POST(req: Request) {
       );
       if (emailRows.length > 0) {
         customerId = emailRows[0].id;
-        await db.query(
-          `UPDATE customers SET first_name = $1, last_name = $2, updated_at = NOW() WHERE id = $3`,
-          [firstName, lastName, customerId]
-        );
       } else {
         const { rows } = await db.query<{ id: number }>(
           `INSERT INTO customers (clerk_id, first_name, last_name, email)
@@ -102,9 +94,29 @@ export async function POST(req: Request) {
 
     // 3. Create Order
     const { rows: orderRows } = await db.query<{ id: number }>(
-      `INSERT INTO orders (customer_id, affiliate_id, total_amount, items)
-       VALUES ($1, $2, $3, $4) RETURNING id`,
-      [customerId, affiliateId, total, JSON.stringify(items)]
+      `INSERT INTO orders (
+         customer_id,
+         affiliate_id,
+         total_amount,
+         items,
+         customer_name,
+         customer_email,
+         customer_phone,
+         delivery_method,
+         shipping_address
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+      [
+        customerId,
+        affiliateId,
+        total,
+        JSON.stringify(items),
+        customer.name.trim(),
+        email,
+        customer.phone.trim(),
+        customer.deliveryMethod,
+        customer.shippingAddress?.trim() || null
+      ]
     );
 
     const orderId = orderRows[0].id;

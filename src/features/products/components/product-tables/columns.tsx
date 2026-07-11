@@ -12,6 +12,9 @@ export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: 'photo_url',
     header: 'Ảnh',
+    meta: {
+      label: 'Ảnh'
+    },
     cell: ({ row }) => {
       return (
         <div className='relative h-16 w-16 overflow-hidden rounded-lg border bg-muted/30'>
@@ -71,11 +74,17 @@ export const columns: ColumnDef<Product>[] = [
   },
   {
     accessorKey: 'price',
-    header: 'Giá'
+    header: 'Giá',
+    meta: {
+      label: 'Giá'
+    }
   },
   {
     accessorKey: 'description',
-    header: 'Mô tả'
+    header: 'Mô tả',
+    meta: {
+      label: 'Mô tả'
+    }
   },
   {
     id: 'actions',

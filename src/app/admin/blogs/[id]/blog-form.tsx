@@ -15,6 +15,26 @@ interface BlogFormProps {
   initialData: BlogRecord | null;
 }
 
+type UploadResponse = {
+  success?: boolean;
+  message?: string;
+  url?: string;
+};
+
+async function readUploadResponse(response: Response): Promise<UploadResponse> {
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as UploadResponse;
+  } catch {
+    return {
+      success: false,
+      message: response.ok
+        ? 'Phản hồi upload không hợp lệ.'
+        : `Upload thất bại (${response.status}).`
+    };
+  }
+}
+
 export function BlogForm({ initialData }: BlogFormProps) {
   const router = useRouter();
   const isNew = !initialData;
@@ -56,6 +76,7 @@ export function BlogForm({ initialData }: BlogFormProps) {
   };
 
   const handleUploadCover = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -68,16 +89,20 @@ export function BlogForm({ initialData }: BlogFormProps) {
         method: 'POST',
         body: data,
       });
-      const result = await response.json();
+      const result = await readUploadResponse(response);
       
-      if (!response.ok) throw new Error(result.message || 'Upload thất bại');
-      
-      setFormData((prev) => ({ ...prev, cover_url: result.url }));
+      if (!response.ok || !result.success || !result.url) {
+        throw new Error(result.message || 'Upload thất bại');
+      }
+
+      const coverUrl = result.url;
+      setFormData((prev) => ({ ...prev, cover_url: coverUrl }));
       toast.success('Đã tải ảnh lên thành công');
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Có lỗi xảy ra');
     } finally {
       setIsUploading(false);
+      input.value = '';
     }
   };
 
@@ -154,7 +179,7 @@ export function BlogForm({ initialData }: BlogFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cover_url">Ảnh cover (Tải lên hoặc nhập URL)</Label>
+            <Label htmlFor="cover_url_file">Ảnh cover</Label>
             <div className="flex flex-col sm:flex-row gap-3">
               <Input
                 id="cover_url_file"
@@ -164,14 +189,9 @@ export function BlogForm({ initialData }: BlogFormProps) {
                 disabled={isUploading}
                 className="cursor-pointer"
               />
-              <Input
-                id="cover_url"
-                name="cover_url"
-                placeholder="https://example.com/image.jpg"
-                value={formData.cover_url}
-                onChange={handleChange}
-                className="flex-1"
-              />
+              <p className="text-muted-foreground self-center text-sm">
+                Chọn ảnh từ máy, tối đa 5MB.
+              </p>
             </div>
             {formData.cover_url && (
               <div className="mt-2 border rounded-md overflow-hidden relative h-40 w-full sm:w-80 bg-gray-50">

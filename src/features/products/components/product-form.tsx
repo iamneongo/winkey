@@ -27,6 +27,20 @@ type UploadResponse = {
   url?: string;
 };
 
+async function readUploadResponse(response: Response): Promise<UploadResponse> {
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as UploadResponse;
+  } catch {
+    return {
+      success: false,
+      message: response.ok
+        ? 'Phản hồi upload không hợp lệ.'
+        : `Upload thất bại (${response.status}).`
+    };
+  }
+}
+
 function isManagedUploadUrl(url?: string) {
   return Boolean(url?.startsWith(MANAGED_UPLOAD_PREFIX));
 }
@@ -104,7 +118,7 @@ export default function ProductForm({
       body: JSON.stringify({ url })
     });
 
-    const result = (await response.json()) as UploadResponse;
+    const result = await readUploadResponse(response);
     if (!response.ok || !result.success) {
       throw new Error(result.message || 'Xóa ảnh thất bại');
     }
@@ -125,7 +139,7 @@ export default function ProductForm({
       body
     });
 
-    const result = (await response.json()) as UploadResponse;
+    const result = await readUploadResponse(response);
 
     if (!response.ok || !result.success || !result.url) {
       throw new Error(result.message || 'Upload thất bại');
@@ -207,20 +221,15 @@ export default function ProductForm({
                 }}
               />
 
-              <FormTextField
-                name='photo_url'
-                label='Ảnh sản phẩm'
-                placeholder='/products/windows-11-pro.svg hoặc URL ảnh'
-              />
             </div>
 
             <form.AppField name='photo_url'>
               {(field) => (
                 <div className='space-y-4'>
                   <div className='space-y-1'>
-                    <p className='text-sm font-medium'>Upload ảnh mới</p>
+                    <p className='text-sm font-medium'>Ảnh sản phẩm</p>
                     <p className='text-muted-foreground text-sm'>
-                      Nếu ảnh hiện tại là ảnh đã upload từ admin, hệ thống sẽ tự xóa ảnh cũ khi bạn thay bằng ảnh mới.
+                      Kéo thả hoặc chọn ảnh từ máy. Hỗ trợ JPG, PNG, WEBP, GIF, AVIF và SVG, tối đa 5MB.
                     </p>
                   </div>
                   <FileUploader

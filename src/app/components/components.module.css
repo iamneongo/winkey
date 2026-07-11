@@ -1037,6 +1037,20 @@
   gap: 16px;
 }
 
+.footerColWide {
+  grid-column: span 2;
+}
+
+@media (max-width: 640px) {
+  .footerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .footerColWide {
+    grid-column: auto;
+  }
+}
+
 .footerLogo {
   font-weight: 800;
   font-size: 1.3rem;
