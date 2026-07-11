@@ -76,7 +76,7 @@ export default async function AdminOrdersPage(props: {
                     <TableCell className="font-medium">#{order.id}</TableCell>
                     <TableCell>
                       <div>
-                        {order.first_name} {order.last_name}
+                        {order.customer_name || 'Chưa có tên'}
                       </div>
                       <div className="text-xs text-gray-500">{order.customer_email}</div>
                     </TableCell>

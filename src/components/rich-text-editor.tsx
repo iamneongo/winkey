@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 const MenuBar = ({ editor }: { editor: Editor | null }) => {
   const [linkUrl, setLinkUrl] = useState('');
@@ -43,6 +44,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
   };
 
   const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -55,15 +57,31 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         method: 'POST',
         body: data,
       });
-      const result = await response.json();
+      const text = await response.text();
+      let result: { success?: boolean; message?: string; url?: string };
+      try {
+        result = JSON.parse(text) as { success?: boolean; message?: string; url?: string };
+      } catch {
+        result = {
+          success: false,
+          message: response.ok
+            ? 'Phản hồi upload không hợp lệ.'
+            : `Upload thất bại (${response.status}).`
+        };
+      }
       
-      if (!response.ok) throw new Error(result.message || 'Upload thất bại');
+      if (!response.ok || !result.success || !result.url) {
+        throw new Error(result.message || 'Upload thất bại');
+      }
       
       editor.chain().focus().setImage({ src: result.url }).run();
+      toast.success('Đã chèn ảnh vào nội dung.');
     } catch (err: unknown) {
       console.error('Image upload failed:', err);
+      toast.error(err instanceof Error ? err.message : 'Không thể chèn ảnh.');
     } finally {
       setIsUploading(false);
+      input.value = '';
     }
   };
 
@@ -187,7 +205,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-8 px-2 flex gap-1" data-state={editor.isActive('link') ? 'open' : 'closed'}>
+          <Button type="button" variant="outline" size="sm" className="h-8 px-2 flex gap-1" data-state={editor.isActive('link') ? 'open' : 'closed'}>
             <LinkIcon className="h-4 w-4" />
             <span>Chèn Link</span>
           </Button>
@@ -206,14 +224,14 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
                 }
               }}
             />
-            <Button size="sm" onClick={setLink}>Áp dụng</Button>
+            <Button type="button" size="sm" onClick={setLink}>Áp dụng</Button>
           </div>
         </PopoverContent>
       </Popover>
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-8 px-2 flex gap-1">
+          <Button type="button" variant="outline" size="sm" className="h-8 px-2 flex gap-1">
             <ImageIcon className="h-4 w-4" />
             <span>Chèn Ảnh</span>
           </Button>
@@ -244,7 +262,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
                   }
                 }}
               />
-              <Button size="sm" onClick={addImage}>Chèn</Button>
+              <Button type="button" size="sm" onClick={addImage}>Chèn</Button>
             </div>
           </div>
         </PopoverContent>
@@ -252,6 +270,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
 
       <div className="ml-auto flex items-center">
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           className="h-8 w-8 p-0"
@@ -261,6 +280,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
           <Undo className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           className="h-8 w-8 p-0"
@@ -306,6 +326,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-3 py-2 border rounded-md bg-background',
+        'aria-label': placeholder ?? 'Nội dung bài viết',
       },
     },
     onUpdate: ({ editor }) => {

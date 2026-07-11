@@ -1,23 +1,26 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Check,
+  AlertTriangle,
   CheckCircle2,
-  Copy,
   CreditCard,
   MapPin,
   Minus,
   Plus,
   ShoppingBag,
   Trash2,
-  Truck,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
+import { toast } from "sonner";
 import { useCart, type CartItem } from "../context/CartContext";
 import styles from "./components.module.css";
 import { QRPaymentScreen } from "./QRPaymentScreen";
+
+type CheckoutStep = "cart" | "qr" | "success" | "invoice-error";
+type CheckoutStatus = "idle" | "creating-order" | "creating-invoice";
 
 type DeliveryMethod = "online" | "ship-code" | "ship-disk";
 
@@ -89,12 +92,18 @@ export const CartDrawer: React.FC = () => {
     removeFromCart,
     cartTotal,
     clearCart,
+    resetSignal,
   } = useCart();
 
   const [customerForm, setCustomerForm] = useState<CustomerForm>(initialCustomerForm);
   const [validationError, setValidationError] = useState("");
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [orderId, setOrderId] = useState<number | null>(null);
+  const [step, setStep] = useState<CheckoutStep>("cart");
+  const [status, setStatus] = useState<CheckoutStatus>("idle");
+  const [qrData, setQrData] = useState<{ qrImage: string; amount: number; orderId: number } | null>(null);
+
+  const busy = status !== "idle";
+  const submittingRef = useRef(false);
 
   const { userId } = useAuth();
 
@@ -107,10 +116,91 @@ export const CartDrawer: React.FC = () => {
     setValidationError("");
   };
 
-  const [step, setStep] = useState<'cart' | 'qr' | 'success'>('cart');
-  const [qrData, setQrData] = useState<{ qrImage: string; amount: number; orderId: number } | null>(null);
+  // Reset checkout state when the cart is force-reset (e.g. on sign-out). Adjusting
+  // state during render, guarded by the previously-seen signal, is React's recommended
+  // pattern for "reset when a value changes" and avoids cascading effects.
+  const [seenResetSignal, setSeenResetSignal] = useState(resetSignal);
+  if (resetSignal !== seenResetSignal) {
+    setSeenResetSignal(resetSignal);
+    setStep("cart");
+    setStatus("idle");
+    setOrderId(null);
+    setQrData(null);
+    setValidationError("");
+    setCustomerForm(initialCustomerForm);
+  }
+
+  // Starting a new shopping session (empty -> non-empty) after a finished checkout
+  // returns the drawer to the cart view instead of the stale result screen.
+  const [seenCartLen, setSeenCartLen] = useState(cart.length);
+  if (cart.length !== seenCartLen) {
+    const wasEmpty = seenCartLen === 0;
+    setSeenCartLen(cart.length);
+    if (wasEmpty && cart.length > 0 && (step === "success" || step === "invoice-error")) {
+      setStep("cart");
+      setOrderId(null);
+      setQrData(null);
+      setValidationError("");
+    }
+  }
+
+  // Drawer accessibility: lock body scroll, close on Escape, manage focus.
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!isCartOpen) return;
+    lastFocusedRef.current = (document.activeElement as HTMLElement) ?? null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusTimer = window.setTimeout(() => closeBtnRef.current?.focus({ preventScroll: true }), 60);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsCartOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      lastFocusedRef.current?.focus?.();
+    };
+  }, [isCartOpen, setIsCartOpen]);
+
+  // Step 2 (idempotent): create/resume the QR invoice for an EXISTING order.
+  const createInvoice = async (targetOrderId: number) => {
+    setStatus("creating-invoice");
+    try {
+      const invoiceRes = await fetch("/api/payment/create-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: targetOrderId }),
+      });
+      const invoiceData = await invoiceRes.json().catch(() => ({}));
+
+      if (!invoiceRes.ok || !invoiceData.qrImage) {
+        setStatus("idle");
+        setStep("invoice-error");
+        toast.error(
+          `Đơn hàng #${targetOrderId} đã được tạo, nhưng chưa thể khởi tạo mã thanh toán. Bạn có thể thử tạo lại.`
+        );
+        return;
+      }
+
+      setQrData({ qrImage: invoiceData.qrImage, amount: invoiceData.amount, orderId: targetOrderId });
+      setStep("qr");
+      setStatus("idle");
+    } catch (error) {
+      console.error(error);
+      setStatus("idle");
+      setStep("invoice-error");
+      toast.error(
+        `Đơn hàng #${targetOrderId} đã được tạo, nhưng chưa thể khởi tạo mã thanh toán. Bạn có thể thử tạo lại.`
+      );
+    }
+  };
 
   const handleCheckout = async () => {
+    if (submittingRef.current) return;
+
     const trimmedName = customerForm.name.trim();
     const trimmedEmail = customerForm.email.trim();
     const trimmedPhone = customerForm.phone.trim();
@@ -120,33 +210,38 @@ export const CartDrawer: React.FC = () => {
       setValidationError("Vui lòng nhập đầy đủ họ tên, email và số điện thoại trước khi thanh toán.");
       return;
     }
-
     if (!allowedDeliveryMethods.includes(customerForm.deliveryMethod)) {
       setValidationError("Phương thức bàn giao hiện không áp dụng cho các sản phẩm trong giỏ hàng.");
       return;
     }
-
     if (requiresShippingAddress && !trimmedAddress) {
       setValidationError("Vui lòng thêm địa chỉ giao hàng khi chọn hình thức ship mã hoặc ship đĩa cứng.");
       return;
     }
 
-    setIsCheckingOut(true);
+    // Guard against double submits (double-click / slow network).
+    submittingRef.current = true;
+    setValidationError("");
 
     try {
+      // Retry after a partial success reuses the existing order — never creates a new one.
+      if (orderId != null) {
+        await createInvoice(orderId);
+        return;
+      }
+
+      setStatus("creating-order");
       const items = cart.map((item) => ({
         product_id: item.product.id,
         name: item.product.name,
         quantity: item.quantity,
-        price: item.product.price
+        price: item.product.price,
       }));
+      const refCode = localStorage.getItem("referral_code");
 
-      const refCode = localStorage.getItem('referral_code');
-
-      // 1. Create Order
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer: {
             ...customerForm,
@@ -161,44 +256,42 @@ export const CartDrawer: React.FC = () => {
           clerk_id: userId ?? undefined,
         }),
       });
-
-      const data = await res.json() as { success: boolean; orderId?: number; error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        success?: boolean;
+        orderId?: number;
+        error?: string;
+      };
 
       if (!res.ok || !data.success || !data.orderId) {
-        setValidationError(data.error ?? 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.');
-        setIsCheckingOut(false);
+        setStatus("idle");
+        const message = data.error ?? "Không thể tạo đơn hàng. Vui lòng thử lại.";
+        setValidationError(message);
+        toast.error("Không thể tạo đơn hàng. Vui lòng thử lại.");
         return;
       }
 
+      // Order accepted → the cart is considered placed. Retry now depends on orderId, not the cart.
       setOrderId(data.orderId);
-
-      // 2. Create Invoice
-      const invoiceRes = await fetch('/api/payment/create-invoice', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: data.orderId })
-      });
-      const invoiceData = await invoiceRes.json();
-
-      if (!invoiceRes.ok) {
-        setValidationError(invoiceData.error ?? 'Không thể tạo thanh toán QR, vui lòng thử lại.');
-        setIsCheckingOut(false);
-        return;
-      }
-
-      setQrData({
-        qrImage: invoiceData.qrImage,
-        amount: invoiceData.amount,
-        orderId: data.orderId
-      });
-      
-      setStep('qr');
-      setIsCheckingOut(false);
       clearCart();
+      await createInvoice(data.orderId);
     } catch (error) {
       console.error(error);
-      setValidationError("Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.");
-      setIsCheckingOut(false);
+      setStatus("idle");
+      const message = "Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.";
+      setValidationError(message);
+      toast.error(message);
+    } finally {
+      submittingRef.current = false;
+    }
+  };
+
+  const handleRetryInvoice = async () => {
+    if (submittingRef.current || orderId == null) return;
+    submittingRef.current = true;
+    try {
+      await createInvoice(orderId);
+    } finally {
+      submittingRef.current = false;
     }
   };
 
@@ -209,40 +302,101 @@ export const CartDrawer: React.FC = () => {
         onClick={() => setIsCartOpen(false)}
       />
 
-      <div className={`${styles.drawer} ${isCartOpen ? styles.drawerOpen : ""}`}>
+      <div
+        className={`${styles.drawer} ${isCartOpen ? styles.drawerOpen : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Giỏ hàng của bạn"
+        aria-hidden={!isCartOpen || undefined}
+        inert={!isCartOpen}
+      >
         <div className={styles.drawerHeader}>
           <h3>
             <ShoppingBag size={20} color="var(--primary-blue)" />
             <span>Giỏ hàng của bạn</span>
           </h3>
-          <button className={styles.closeBtn} onClick={() => setIsCartOpen(false)}>
+          <button
+            ref={closeBtnRef}
+            className={styles.closeBtn}
+            onClick={() => setIsCartOpen(false)}
+            aria-label="Đóng giỏ hàng"
+          >
             <X size={24} />
           </button>
         </div>
 
         <div className={styles.drawerBody}>
           {step === 'qr' && qrData ? (
-            <QRPaymentScreen 
-              qrImage={qrData.qrImage} 
-              amount={qrData.amount} 
+            <QRPaymentScreen
+              qrImage={qrData.qrImage}
+              amount={qrData.amount}
               orderId={qrData.orderId}
-              onSuccess={() => setStep('success')}
+              onSuccess={() => {
+                setStep('success');
+                toast.success(`Đơn hàng #${qrData.orderId} đã được thanh toán thành công!`);
+              }}
               onTimeout={() => {
-                setValidationError('Thời gian thanh toán đã hết. Đơn hàng vẫn được lưu lại, bạn có thể kiểm tra ở phần Tài khoản.');
                 setStep('cart');
+                toast('Đã hết thời gian thanh toán', {
+                  description: `Đơn hàng #${qrData.orderId} vẫn được lưu lại, bạn có thể kiểm tra trong Tài khoản.`,
+                });
               }}
               onCancel={() => setStep('cart')}
             />
           ) : step === 'success' ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+            <div className="flex flex-col items-center justify-center p-8 text-center space-y-4" role="status" aria-live="polite">
               <CheckCircle2 size={64} className="text-blue-500" />
               <h2 className="text-2xl font-bold text-gray-900">Thanh toán thành công!</h2>
               <p className="text-gray-600">
                 Đơn hàng #{orderId} của bạn đã được thanh toán. Cảm ơn bạn đã mua hàng tại WinKey.
               </p>
-              <a href={`/tai-khoan/don-hang`} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                Xem đơn hàng
-              </a>
+              {userId ? (
+                <Link
+                  href="/tai-khoan/don-hang"
+                  onClick={() => setIsCartOpen(false)}
+                  className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Xem đơn hàng
+                </Link>
+              ) : (
+                <p className="mt-2 text-sm text-gray-500">
+                  Thông tin đơn hàng và hướng dẫn kích hoạt đã được gửi tới email của bạn.
+                </p>
+              )}
+            </div>
+          ) : step === 'invoice-error' ? (
+            <div className="flex flex-col items-center justify-center p-6 text-center space-y-4" role="status" aria-live="polite">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-50">
+                <AlertTriangle size={28} className="text-amber-500" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">
+                Đơn hàng #{orderId} đã được tạo
+              </h2>
+              <p className="text-sm text-gray-600">
+                Chúng tôi chưa thể khởi tạo mã thanh toán ngay lúc này. Đơn hàng của bạn vẫn được lưu — bạn có thể thử tạo lại mã thanh toán.
+              </p>
+              <button
+                className="btn-grad w-full"
+                style={{ padding: "12px" }}
+                onClick={handleRetryInvoice}
+                disabled={busy}
+                aria-busy={busy}
+              >
+                {busy ? "Đang tạo mã thanh toán..." : "Thử tạo lại mã thanh toán"}
+              </button>
+              {userId ? (
+                <Link
+                  href="/tai-khoan/don-hang"
+                  onClick={() => setIsCartOpen(false)}
+                  className="text-sm font-semibold text-blue-600 hover:underline"
+                >
+                  Xem đơn hàng của tôi
+                </Link>
+              ) : (
+                <p className="text-xs text-gray-500">
+                  Thông tin đơn hàng đã được gửi tới email của bạn.
+                </p>
+              )}
             </div>
           ) : cart.length === 0 ? (
             <div className={styles.emptyCart}>
@@ -408,21 +562,6 @@ export const CartDrawer: React.FC = () => {
                     trước khi hết hạn để khách chủ động gia hạn tiếp.
                   </div>
                 )}
-
-                {validationError ? (
-                  <div
-                    style={{
-                      borderRadius: 12,
-                      background: "rgba(239, 68, 68, 0.08)",
-                      color: "#b91c1c",
-                      padding: 12,
-                      fontSize: "0.82rem",
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {validationError}
-                  </div>
-                ) : null}
               </div>
             </>
           )}
@@ -430,13 +569,37 @@ export const CartDrawer: React.FC = () => {
 
         {cart.length > 0 && step === 'cart' && (
           <div className={styles.drawerFooter}>
+            {/* Status region — kept in the (non-scrolling) footer so it is always visible,
+                even when the cart list is long. */}
+            {validationError ? (
+              <div
+                role="alert"
+                aria-live="assertive"
+                style={{
+                  borderRadius: 12,
+                  background: "rgba(239, 68, 68, 0.08)",
+                  color: "#b91c1c",
+                  padding: 12,
+                  fontSize: "0.82rem",
+                  lineHeight: 1.5,
+                  marginBottom: 12,
+                }}
+              >
+                {validationError}
+              </div>
+            ) : null}
             <div className={styles.summaryRow}>
               <span>Tổng cộng:</span>
               <span className={styles.totalVal}>{formatPrice(cartTotal)}</span>
             </div>
-            <button className={`btn-grad ${styles.checkoutBtn}`} onClick={handleCheckout} disabled={isCheckingOut}>
+            <button
+              className={`btn-grad ${styles.checkoutBtn}`}
+              onClick={handleCheckout}
+              disabled={busy}
+              aria-busy={busy}
+            >
               <CreditCard size={18} />
-              <span>{isCheckingOut ? "Đang xử lý đơn..." : "Thanh toán ngay"}</span>
+              <span>{busy ? "Đang xử lý đơn..." : "Thanh toán ngay"}</span>
             </button>
           </div>
         )}

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
-import { Search, ShoppingCart, Bell, User, LockKeyhole } from "lucide-react";
+import React, { useState, useEffect, Suspense } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Search, ShoppingCart, Bell, User, Menu } from "lucide-react";
 import { useCart } from "../../context/CartContext";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,17 +15,97 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { LogOut, Package, Users } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Trang chủ" },
-  { href: "/cua-hang", label: "Marketplace" },
-  { href: "#", label: "Dịch vụ" },
-  { href: "#", label: "Bản quyền" },
-  { href: "#", label: "AI Tools" },
-  { href: "#", label: "Bảng giá" },
+  { href: "/coming-soon?title=Marketplace", label: "Marketplace" },
+  { href: "/coming-soon?title=Dịch vụ", label: "Dịch vụ" },
+  { href: "/coming-soon?title=Bản quyền", label: "Bản quyền" },
+  { href: "/coming-soon?title=AI Tools", label: "AI Tools" },
   { href: "/tin-tuc", label: "Tin tức" },
 ];
+
+function isNavActive(href: string, pathname: string, currentTitle: string | null): boolean {
+  const [path, query = ""] = href.split("?");
+  if (path === "/") return pathname === "/";
+  if (path === "/coming-soon") {
+    return (
+      pathname === "/coming-soon" &&
+      new URLSearchParams(query).get("title") === currentTitle
+    );
+  }
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
+
+function NavLinks({ pathname, currentTitle }: { pathname: string; currentTitle: string | null }) {
+  return (
+    <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
+      {navLinks.map((item) => {
+        const active = isNavActive(item.href, pathname, currentTitle);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={`text-[13px] font-bold whitespace-nowrap transition-colors hover:text-blue-600 ${
+              active
+                ? "text-blue-600 relative after:absolute after:bottom-[-29px] after:left-0 after:w-full after:h-[3px] after:bg-blue-600 after:rounded-t-md"
+                : "text-slate-700"
+            }`}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function HeaderNav() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  return <NavLinks pathname={pathname} currentTitle={searchParams.get("title")} />;
+}
+
+function AuthButtons({
+  onNavigate,
+  className = "",
+  fullWidth = false,
+}: {
+  onNavigate?: () => void;
+  className?: string;
+  fullWidth?: boolean;
+}) {
+  const base = `inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full px-4 text-center text-sm font-semibold transition-colors ${
+    fullWidth ? "w-full" : ""
+  }`;
+  return (
+    <div className={className}>
+      <Link
+        href="/auth/sign-in"
+        onClick={onNavigate}
+        className={`${base} text-gray-700 bg-gray-100 hover:bg-gray-200 focus-visible:bg-gray-200`}
+      >
+        Đăng nhập
+      </Link>
+      <Link
+        href="/auth/sign-up"
+        onClick={onNavigate}
+        className={`${base} text-white bg-blue-600 hover:bg-blue-700 focus-visible:bg-blue-700 active:bg-blue-800 shadow-sm`}
+      >
+        Đăng ký
+      </Link>
+    </div>
+  );
+}
 
 function UserMenu() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -32,23 +113,9 @@ function UserMenu() {
 
   if (!isLoaded) return null;
 
+  // On mobile the auth buttons live inside the mobile menu, so hide them here below lg.
   if (!isSignedIn) {
-    return (
-      <div className="flex items-center gap-2">
-        <Link
-          href="/auth/sign-in"
-          className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
-        >
-          Đăng nhập
-        </Link>
-        <Link
-          href="/auth/sign-up"
-          className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors shadow-sm"
-        >
-          Đăng ký
-        </Link>
-      </div>
-    );
+    return <AuthButtons className="hidden lg:flex items-center gap-2" />;
   }
 
   const initials =
@@ -59,7 +126,10 @@ function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center justify-center p-0 bg-transparent border-none cursor-pointer">
+        <button
+          aria-label="Tài khoản"
+          className="flex items-center justify-center p-0 bg-transparent border-none cursor-pointer"
+        >
           <Avatar className="w-9 h-9 border border-gray-100 shadow-sm">
             <AvatarImage src={user.imageUrl} alt={user.fullName ?? "Avatar"} />
             <AvatarFallback className="bg-blue-600 text-white text-xs font-bold">
@@ -103,10 +173,42 @@ function UserMenu() {
   );
 }
 
+function MobileMenuLinks({ onNavigate }: { onNavigate: () => void }) {
+  const pathname = usePathname();
+  const { isSignedIn, isLoaded } = useUser();
+
+  return (
+    <div className="flex flex-col gap-1">
+      {navLinks.map((item) => {
+        // Match by pathname only (search-param disambiguation isn't needed in the list).
+        const active = isNavActive(item.href, pathname, null);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            aria-current={active ? "page" : undefined}
+            className={`rounded-lg px-3 py-3 text-sm font-bold transition-colors ${
+              active ? "bg-blue-50 text-blue-600" : "text-slate-700 hover:bg-gray-50"
+            }`}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+
+      {isLoaded && !isSignedIn && (
+        <AuthButtons onNavigate={onNavigate} fullWidth className="mt-4 grid grid-cols-2 gap-2" />
+      )}
+    </div>
+  );
+}
+
 export function MarketplaceHeader() {
   const { cartCount, setIsCartOpen } = useCart();
   const [searchFocused, setSearchFocused] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -114,8 +216,8 @@ export function MarketplaceHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm">
-      <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-6">
-        
+      <div className="mx-auto w-full max-w-[1600px] px-4 md:px-6 h-20 flex items-center justify-between gap-3 md:gap-6">
+
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
           <div className="w-10 h-10 flex items-center justify-center transition-transform group-hover:scale-105">
@@ -125,56 +227,86 @@ export function MarketplaceHeader() {
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-black text-gray-900 leading-tight tracking-tight">WinKey</span>
-            <span className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.1em] mt-[-2px]">Bản quyền & Phần mềm</span>
+            <span className="hidden sm:block text-[9px] text-gray-500 font-bold uppercase tracking-[0.1em] mt-[-2px]">Bản quyền &amp; Phần mềm</span>
           </div>
         </Link>
 
-        {/* Search Bar */}
-        <div className={`hidden md:flex flex-1 max-w-md items-center bg-gray-50 rounded-full px-4 py-2 border transition-all ${searchFocused ? 'border-blue-300 ring-2 ring-blue-100 bg-white' : 'border-transparent'}`}>
+        {/* Search Bar (desktop only, from xl to avoid crowding navigation at lg) */}
+        <div className={`hidden xl:flex flex-1 max-w-md items-center bg-gray-50 rounded-full px-4 py-2 border transition-all ${searchFocused ? 'border-blue-300 ring-2 ring-blue-100 bg-white' : 'border-transparent'}`}>
           <Search className="w-4 h-4 text-gray-400 mr-2" />
-          <input 
-            type="text" 
-            placeholder="Tìm kiếm sản phẩm, dịch vụ..." 
+          <input
+            type="text"
+            placeholder="Tìm kiếm sản phẩm, dịch vụ..."
+            aria-label="Tìm kiếm sản phẩm, dịch vụ"
             className="bg-transparent border-none outline-none w-full text-sm text-gray-700 placeholder:text-gray-400"
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
           />
         </div>
 
-        {/* Navigation */}
-        <nav className="hidden lg:flex items-center space-x-6">
-          {navLinks.map((item, idx) => (
-            <Link 
-              key={idx} 
-              href={item.href} 
-              className={`text-[13px] font-bold transition-colors hover:text-blue-600 ${idx === 0 ? 'text-blue-600 relative after:absolute after:bottom-[-29px] after:left-0 after:w-full after:h-[3px] after:bg-blue-600 after:rounded-t-md' : 'text-slate-700'}`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Desktop Navigation */}
+        <Suspense fallback={<NavLinks pathname="" currentTitle={null} />}>
+          <HeaderNav />
+        </Suspense>
 
-        {/* Actions (Cart, Notif, User) */}
-        <div className="flex items-center gap-5 flex-shrink-0">
-          <button 
+        {/* Actions (Cart, Notif, User, Mobile toggle) */}
+        <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-shrink-0">
+          <button
             onClick={() => setIsCartOpen(true)}
-            className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors"
+            className="relative flex items-center justify-center w-11 h-11 text-gray-700 hover:text-blue-600 transition-colors"
             aria-label="Giỏ hàng"
           >
             <ShoppingCart className="w-[22px] h-[22px]" strokeWidth={2.5} />
             {isMounted && cartCount > 0 && (
-              <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
                 {cartCount > 9 ? "9+" : cartCount}
               </span>
             )}
           </button>
-          
-          <button className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors">
+
+          <button
+            className="relative hidden md:flex items-center justify-center w-11 h-11 text-gray-700 hover:text-blue-600 transition-colors"
+            aria-label="Thông báo"
+          >
             <Bell className="w-[22px] h-[22px]" strokeWidth={2.5} />
-            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+            <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
           </button>
 
           <UserMenu />
+
+          {/* Mobile / tablet menu — off-canvas drawer sliding in from the right */}
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                aria-label="Mở menu"
+                className="lg:hidden flex items-center justify-center w-11 h-11 text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+            </SheetTrigger>
+            <SheetContent
+              side="right"
+              className="w-[88vw] max-w-[360px] sm:w-[400px] sm:max-w-[420px] gap-0 overflow-y-auto p-0 pb-[env(safe-area-inset-bottom)]"
+            >
+              <SheetHeader className="px-5 pt-5 pb-2">
+                <SheetTitle className="text-base">Menu</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col px-5 pb-6">
+                {/* Search inside the drawer (header search is desktop-only) */}
+                <div className="flex items-center bg-gray-50 rounded-full px-4 py-2.5 border border-transparent focus-within:border-blue-300 focus-within:bg-white mb-4">
+                  <Search className="w-4 h-4 text-gray-400 mr-2" />
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm sản phẩm, dịch vụ..."
+                    aria-label="Tìm kiếm sản phẩm, dịch vụ"
+                    className="bg-transparent border-none outline-none w-full text-sm text-gray-700 placeholder:text-gray-400"
+                  />
+                </div>
+                <MobileMenuLinks onNavigate={() => setMobileOpen(false)} />
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>

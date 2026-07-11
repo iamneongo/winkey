@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
+import { useAuth } from "@clerk/nextjs";
 
 export interface Product {
   id: string;
@@ -35,14 +36,31 @@ interface CartContextType {
   setIsCartOpen: (isOpen: boolean) => void;
   cartTotal: number;
   cartCount: number;
+  /** Increments whenever the cart is force-reset (e.g. on sign-out) so consumers can reset their local checkout state. */
+  resetSignal: number;
 }
 
 const CART_STORAGE_KEY = "win_keys_cart";
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+function persistCart(newCart: CartItem[]) {
+  if (typeof window === "undefined") return;
+  // Keep storage clean: remove the key entirely when the cart is empty
+  if (newCart.length === 0) {
+    window.localStorage.removeItem(CART_STORAGE_KEY);
+  } else {
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart));
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [resetSignal, setResetSignal] = useState(0);
+
+  const { isLoaded, userId } = useAuth();
+  // `undefined` = auth state not observed yet (avoids treating the first load as a transition).
+  const prevUserIdRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -57,11 +75,51 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Clear the cart when the user transitions from signed-in -> signed-out.
+  // We wait for Clerk to be loaded and only act on a real transition, so a guest
+  // cart is never wiped just because `isSignedIn` is momentarily undefined on load.
+  useEffect(() => {
+    if (!isLoaded) return;
+    const previousUserId = prevUserIdRef.current;
+
+    if (previousUserId === undefined) {
+      // First observed auth state — record it without treating it as a transition.
+      prevUserIdRef.current = userId ?? null;
+      return;
+    }
+
+    if (previousUserId && !userId) {
+      setCart([]);
+      persistCart([]);
+      setIsCartOpen(false);
+      setResetSignal((n) => n + 1);
+    }
+
+    prevUserIdRef.current = userId ?? null;
+  }, [isLoaded, userId]);
+
+  // Keep the in-memory cart in sync across tabs (e.g. sign-out in another tab clears storage).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== CART_STORAGE_KEY) return;
+      if (!event.newValue) {
+        setCart([]);
+        return;
+      }
+      try {
+        setCart(JSON.parse(event.newValue));
+      } catch {
+        /* ignore malformed payloads from other tabs */
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   const saveCart = (newCart: CartItem[]) => {
     setCart(newCart);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart));
-    }
+    persistCart(newCart);
   };
 
   const addToCart = (product: Product) => {
@@ -110,7 +168,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         isCartOpen,
         setIsCartOpen,
         cartTotal,
-        cartCount
+        cartCount,
+        resetSignal
       }}
     >
       {children}

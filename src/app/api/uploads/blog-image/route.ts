@@ -10,13 +10,22 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']);
+const ALLOWED_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+  'image/svg+xml'
+]);
 const UPLOAD_PREFIX = '/uploads/blogs/';
 
 function getExtension(file: File) {
   if (file.type === 'image/jpeg') return '.jpg';
   if (file.type === 'image/png') return '.png';
   if (file.type === 'image/webp') return '.webp';
+  if (file.type === 'image/gif') return '.gif';
+  if (file.type === 'image/avif') return '.avif';
   if (file.type === 'image/svg+xml') return '.svg';
 
   const ext = path.extname(file.name || '').toLowerCase();
@@ -36,6 +45,16 @@ function resolveManagedUploadPath(url: string) {
   return path.join(process.cwd(), 'public', 'uploads', 'blogs', fileName);
 }
 
+function isUploadFile(value: FormDataEntryValue | null): value is File {
+  return (
+    value !== null &&
+    typeof value !== 'string' &&
+    typeof value.arrayBuffer === 'function' &&
+    typeof value.type === 'string' &&
+    typeof value.size === 'number'
+  );
+}
+
 export async function POST(request: Request) {
   const authError = await requireAdmin();
   if (authError) return authError;
@@ -44,13 +63,17 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get('file');
 
-    if (!(file instanceof File)) {
+    if (!isUploadFile(file)) {
       return NextResponse.json({ success: false, message: 'Không tìm thấy file upload.' }, { status: 400 });
+    }
+
+    if (file.size === 0) {
+      return NextResponse.json({ success: false, message: 'File ảnh đang trống.' }, { status: 400 });
     }
 
     if (!ALLOWED_TYPES.has(file.type)) {
       return NextResponse.json(
-        { success: false, message: 'Chỉ hỗ trợ JPG, PNG, WEBP hoặc SVG.' },
+        { success: false, message: 'Chỉ hỗ trợ JPG, PNG, WEBP, GIF, AVIF hoặc SVG.' },
         { status: 400 }
       );
     }
@@ -94,7 +117,7 @@ export async function POST(request: Request) {
       url: blob.url
     });
   } catch (error) {
-    console.error('Product image upload failed:', error);
+    console.error('Blog image upload failed:', error);
     return NextResponse.json(
       { success: false, message: 'Upload ảnh thất bại.' },
       { status: 500 }
@@ -129,10 +152,10 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Đã xóa ảnh sản phẩm.'
+      message: 'Đã xóa ảnh blog.'
     });
   } catch (error) {
-    console.error('Product image delete failed:', error);
+    console.error('Blog image delete failed:', error);
     return NextResponse.json(
       { success: false, message: 'Xóa ảnh thất bại.' },
       { status: 500 }

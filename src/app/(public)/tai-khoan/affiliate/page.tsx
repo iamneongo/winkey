@@ -8,9 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CopyButton } from '../don-hang/[id]/copy-button'; // Reuse copy button
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { getCommissionsByAffiliate } from '@/lib/catalog';
+import { AccountPagination } from '../account-pagination';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +20,16 @@ interface Commission {
   status: string;
   created_at: string;
   total_amount: string | number;
+}
+
+function commissionStatusMeta(status: string): {
+  label: string;
+  variant: 'default' | 'outline' | 'secondary';
+  className: string;
+} {
+  if (status === 'paid') return { label: 'Đã rút', variant: 'default', className: '' };
+  if (status === 'approved') return { label: 'Khả dụng', variant: 'outline', className: 'border-blue-500 text-blue-600' };
+  return { label: 'Chờ duyệt', variant: 'secondary', className: '' };
 }
 
 export default async function AffiliatePage(props: {
@@ -41,9 +50,9 @@ export default async function AffiliatePage(props: {
     return (
       <div>
         <h1 className="text-2xl font-bold mb-4">Cộng tác viên (Affiliate)</h1>
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-8 rounded-xl text-center">
-          <h2 className="text-2xl font-bold text-blue-900 mb-3">Trở thành Đối tác của WinKey</h2>
-          <p className="text-blue-800 mb-6 max-w-lg mx-auto">
+        <div className="rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 text-center sm:p-8">
+          <h2 className="mb-3 text-xl font-bold text-blue-900 sm:text-2xl">Trở thành Đối tác của WinKey</h2>
+          <p className="mx-auto mb-6 max-w-lg text-blue-800">
             Chia sẻ link giới thiệu của bạn và nhận hoa hồng lên tới <strong>10%</strong> cho mỗi đơn hàng mua bản quyền thành công. Đăng ký hoàn toàn miễn phí!
           </p>
           <RegisterButton />
@@ -72,7 +81,7 @@ export default async function AffiliatePage(props: {
 
   // Pagination for commissions
   const searchParams = await props.searchParams;
-  const page = parseInt(searchParams.page || '1', 10);
+  const page = Math.max(1, parseInt(searchParams.page || '1', 10) || 1);
   const limit = 10;
   const totalPages = Math.ceil(commissions.length / limit);
   const paginatedCommissions = commissions.slice((page - 1) * limit, page * limit);
@@ -84,20 +93,20 @@ export default async function AffiliatePage(props: {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold mb-2">Dashboard Cộng tác viên</h1>
-        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 px-4 py-3 rounded-lg">
-          <span className="text-sm font-medium text-blue-800">Link giới thiệu của bạn:</span>
-          <code className="text-blue-900 font-mono font-bold bg-white px-2 py-1 rounded">{refLink}</code>
-          <CopyButton text={refLink} />
+        <div className="flex flex-col gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 sm:flex-row sm:items-center">
+          <span className="shrink-0 text-sm font-medium text-blue-800">Link giới thiệu của bạn:</span>
+          <code className="min-w-0 flex-1 break-all rounded bg-white px-2 py-1 font-mono text-sm font-bold text-blue-900">{refLink}</code>
+          <CopyButton text={refLink} className="w-full shrink-0 sm:w-auto" />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-gray-500 font-medium">Số dư khả dụng</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{formatCurrency(Number(affiliate.balance))}</div>
+            <div className="text-xl font-bold break-words text-blue-600 lg:text-2xl">{formatCurrency(Number(affiliate.balance))}</div>
           </CardContent>
         </Card>
         <Card>
@@ -105,7 +114,7 @@ export default async function AffiliatePage(props: {
             <CardTitle className="text-sm text-gray-500 font-medium">Hoa hồng chờ duyệt</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{formatCurrency(totalPending)}</div>
+            <div className="text-xl font-bold break-words text-yellow-600 lg:text-2xl">{formatCurrency(totalPending)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -113,7 +122,7 @@ export default async function AffiliatePage(props: {
             <CardTitle className="text-sm text-gray-500 font-medium">Tổng đã kiếm</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{formatCurrency(totalEarned)}</div>
+            <div className="text-xl font-bold break-words text-blue-600 lg:text-2xl">{formatCurrency(totalEarned)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -121,70 +130,86 @@ export default async function AffiliatePage(props: {
             <CardTitle className="text-sm text-gray-500 font-medium">Tổng đã rút</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-800">{formatCurrency(totalPaid)}</div>
+            <div className="text-xl font-bold break-words text-slate-800 lg:text-2xl">{formatCurrency(totalPaid)}</div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 space-y-4">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
+        <div className="space-y-4 xl:col-span-2">
           <h2 className="text-xl font-bold">Lịch sử hoa hồng</h2>
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Mã đơn</TableHead>
-                    <TableHead>Ngày phát sinh</TableHead>
-                    <TableHead>Tổng đơn</TableHead>
-                    <TableHead>Hoa hồng</TableHead>
-                    <TableHead className="text-right">Trạng thái</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedCommissions.length === 0 ? (
+              {/* Desktop: table */}
+              <div className="hidden overflow-x-auto lg:block">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                        Chưa có lịch sử hoa hồng nào. Hãy chia sẻ link giới thiệu của bạn!
-                      </TableCell>
+                      <TableHead>Mã đơn</TableHead>
+                      <TableHead>Ngày phát sinh</TableHead>
+                      <TableHead>Tổng đơn</TableHead>
+                      <TableHead>Hoa hồng</TableHead>
+                      <TableHead className="text-right">Trạng thái</TableHead>
                     </TableRow>
-                  ) : (
-                    paginatedCommissions.map((c: Commission) => (
-                      <TableRow key={c.id}>
-                        <TableCell className="font-medium">
-                          #{c.order_id}
-                        </TableCell>
-                        <TableCell className="text-sm">{new Date(c.created_at).toLocaleDateString('vi-VN')}</TableCell>
-                        <TableCell className="text-sm">{formatCurrency(Number(c.total_amount))}</TableCell>
-                        <TableCell className="font-semibold text-blue-600">+{formatCurrency(Number(c.amount))}</TableCell>
-                        <TableCell className="text-right">
-                          <Badge variant={
-                            c.status === 'paid' ? 'default' : 
-                            c.status === 'approved' ? 'outline' : 'secondary'
-                          } className={c.status === 'approved' ? 'border-blue-500 text-blue-600' : ''}>
-                            {c.status === 'paid' ? 'Đã rút' : c.status === 'approved' ? 'Khả dụng' : 'Chờ duyệt'}
-                          </Badge>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedCommissions.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                          Chưa có lịch sử hoa hồng nào. Hãy chia sẻ link giới thiệu của bạn!
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between p-4 border-t">
-                  <p className="text-sm text-gray-500">
-                    Trang {page} / {totalPages}
+                    ) : (
+                      paginatedCommissions.map((c: Commission) => {
+                        const meta = commissionStatusMeta(c.status);
+                        return (
+                          <TableRow key={c.id}>
+                            <TableCell className="font-medium">#{c.order_id}</TableCell>
+                            <TableCell className="whitespace-nowrap text-sm">{new Date(c.created_at).toLocaleDateString('vi-VN')}</TableCell>
+                            <TableCell className="whitespace-nowrap text-sm">{formatCurrency(Number(c.total_amount))}</TableCell>
+                            <TableCell className="whitespace-nowrap font-semibold text-blue-600">+{formatCurrency(Number(c.amount))}</TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant={meta.variant} className={meta.className}>{meta.label}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile / tablet: commission cards */}
+              <div className="lg:hidden">
+                {paginatedCommissions.length === 0 ? (
+                  <p className="px-4 py-8 text-center text-gray-500">
+                    Chưa có lịch sử hoa hồng nào. Hãy chia sẻ link giới thiệu của bạn!
                   </p>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" asChild disabled={page <= 1}>
-                      <Link href={`/tai-khoan/affiliate?page=${page - 1}`}>Trước</Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild disabled={page >= totalPages}>
-                      <Link href={`/tai-khoan/affiliate?page=${page + 1}`}>Sau</Link>
-                    </Button>
-                  </div>
-                </div>
-              )}
+                ) : (
+                  <ul className="divide-y">
+                    {paginatedCommissions.map((c: Commission) => {
+                      const meta = commissionStatusMeta(c.status);
+                      return (
+                        <li key={c.id} className="p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="font-medium">#{c.order_id}</span>
+                            <Badge variant={meta.variant} className={`shrink-0 ${meta.className}`}>{meta.label}</Badge>
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-end justify-between gap-x-4 gap-y-1 text-sm">
+                            <div className="text-gray-500">
+                              <div>Ngày: {new Date(c.created_at).toLocaleDateString('vi-VN')}</div>
+                              <div>Tổng đơn: {formatCurrency(Number(c.total_amount))}</div>
+                            </div>
+                            <div className="text-base font-semibold text-blue-600">+{formatCurrency(Number(c.amount))}</div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
+              <AccountPagination page={page} totalPages={totalPages} basePath="/tai-khoan/affiliate" />
             </CardContent>
           </Card>
         </div>

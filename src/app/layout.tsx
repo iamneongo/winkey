@@ -73,21 +73,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang='vi' suppressHydrationWarning data-theme={themeToApply}>
-      <head>
-        <Script
-          id="theme-color-script"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                if (localStorage.theme === 'dark' || ((!('theme' in localStorage) || localStorage.theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '${META_THEME_COLORS.dark}')
-                }
-              } catch (_) {}
-            `
-          }}
-        />
-      </head>
       <body className={`${arimo.variable} ${geistMono.variable} bg-background overflow-x-hidden overscroll-none font-sans antialiased`}>
         <NextTopLoader color='var(--primary)' showSpinner={false} />
         <Suspense fallback={null}>
@@ -108,6 +93,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Providers>
           </ThemeProvider>
         </NuqsAdapter>
+        {/*
+          beforeInteractive scripts must live in the root layout's <body> (not <head>).
+          Placing it in <head> made React client-render a raw <script>, triggering the
+          "Encountered a script tag while rendering React component" console error.
+        */}
+        <Script
+          id="theme-color-script"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.theme === 'dark' || ((!('theme' in localStorage) || localStorage.theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '${META_THEME_COLORS.dark}')
+                }
+              } catch (_) {}
+            `
+          }}
+        />
       </body>
     </html>
   );

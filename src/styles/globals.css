@@ -68,3 +68,16 @@ body {
 ::view-transition-new(root) {
   animation: reveal 0.4s ease-in-out forwards;
 }
+
+/*
+ * Respect prefers-reduced-motion for the slide-in Sheet drawer (mobile menu).
+ * The slide/fade come from tailwindcss-animate utilities, so we neutralise their
+ * duration here. !important is required to override those utility animations.
+ */
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='sheet-content'],
+  [data-slot='sheet-overlay'] {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
