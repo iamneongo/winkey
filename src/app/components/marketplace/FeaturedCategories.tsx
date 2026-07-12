@@ -5,42 +5,49 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 
+// `category` must match the ids in src/lib/marketplace-categories.ts (used by /cua-hang?category=)
 const featuredCategories = [
-  { 
-    name: "Phần mềm bản quyền", 
-    count: "2.350+", 
+  {
+    name: "Phần mềm bản quyền",
+    count: "2.350+",
     icon: "https://thesvg.org/icons/windows/default.svg",
-    bg: "bg-blue-50"
+    bg: "bg-blue-50",
+    category: "windows"
   },
-  { 
-    name: "Âm nhạc bản quyền", 
-    count: "15.000+", 
+  {
+    name: "Âm nhạc bản quyền",
+    count: "15.000+",
     icon: "https://thesvg.org/icons/apple-music/default.svg",
-    bg: "bg-pink-50"
+    bg: "bg-pink-50",
+    category: "am-nhac"
   },
-  { 
-    name: "Video & Stock Media", 
-    count: "8.500+", 
+  {
+    name: "Video & Stock Media",
+    count: "8.500+",
     icon: "https://thesvg.org/icons/youtube/default.svg",
-    bg: "bg-purple-50"
+    bg: "bg-purple-50",
+    category: "video"
   },
-  { 
-    name: "AI Tools", 
-    count: "1.200+", 
+  {
+    name: "AI Tools",
+    count: "1.200+",
     icon: "https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg",
-    bg: "bg-emerald-50"
+    bg: "bg-emerald-50",
+    category: "ai-tools"
   },
-  { 
-    name: "Digital Marketing", 
-    count: "2.000+", 
+  {
+    name: "Digital Marketing",
+    count: "2.000+",
     icon: "https://thesvg.org/icons/google-ads/default.svg",
-    bg: "bg-orange-50"
+    bg: "bg-orange-50",
+    category: "digital-marketing"
   },
-  { 
-    name: "Website & Hosting", 
-    count: "1.500+", 
+  {
+    name: "Website & Hosting",
+    count: "1.500+",
     icon: "https://thesvg.org/icons/github/default.svg",
-    bg: "bg-sky-50"
+    bg: "bg-sky-50",
+    category: "website"
   }
 ];
 
@@ -55,8 +62,8 @@ export function FeaturedCategories() {
       </div>
       
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {featuredCategories.map((cat, idx) => (
-          <Link key={idx} href="/cua-hang" className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center text-center hover:border-blue-200 hover:shadow-md transition-all group">
+        {featuredCategories.map((cat) => (
+          <Link key={cat.category} href={`/cua-hang?category=${cat.category}`} className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center text-center hover:border-blue-200 hover:shadow-md transition-all group">
             <div className={`w-14 h-14 ${cat.bg} rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
                {/* Using an img tag with placeholder icons for now */}
                {cat.icon.startsWith('http') || cat.icon.startsWith('/') ? (

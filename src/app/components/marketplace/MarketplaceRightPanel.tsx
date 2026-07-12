@@ -17,10 +17,10 @@ import {
 
 export function MarketplaceRightPanel() {
   return (
-    <aside className="w-72 flex-shrink-0 hidden lg:flex flex-col gap-6 sticky top-28 self-start max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-hide pb-6">
-      
+    <aside className="w-72 flex-shrink-0 hidden lg:flex flex-col gap-6 sticky top-24 self-start max-h-[calc(100dvh-7rem)] overflow-y-auto pb-6">
+
       {/* Tại sao chọn WinKey? */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <div className="shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
         <h3 className="font-bold text-[15px] text-gray-900 mb-4">Tại sao chọn WinKey.vn?</h3>
         <ul className="space-y-4">
           <li className="flex gap-3">
@@ -72,7 +72,7 @@ export function MarketplaceRightPanel() {
       </div>
 
       {/* AI Assistant */}
-      <div className="bg-gradient-to-b from-blue-50/50 to-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden flex flex-col">
+      <div className="shrink-0 bg-gradient-to-b from-blue-50/50 to-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden flex flex-col">
         <div className="px-4 py-3 border-b border-blue-100 flex justify-between items-center bg-white/50 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center shadow-sm">
@@ -115,7 +115,7 @@ export function MarketplaceRightPanel() {
       </div>
 
       {/* Thống kê nền tảng */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <div className="shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
         <h3 className="font-bold text-[15px] text-gray-900 mb-4">Thống kê nền tảng</h3>
         <ul className="space-y-4">
           <li className="flex items-center gap-3">

@@ -26,6 +26,9 @@ export function DataTableColumnHeader<TData, TValue>({
   className,
   ...props
 }: DataTableColumnHeaderProps<TData, TValue>) {
+  // TanStack column instance is referentially stable — opt out of React Compiler
+  // memoization so sort/visibility state stays live.
+  'use no memo';
   if (!column.getCanSort() && !column.getCanHide()) {
     return <div className={cn(className)}>{title}</div>;
   }

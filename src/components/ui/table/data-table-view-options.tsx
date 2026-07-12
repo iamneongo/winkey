@@ -22,6 +22,9 @@ interface DataTableViewOptionsProps<TData> {
 }
 
 export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps<TData>) {
+  // TanStack Table instance is referentially stable — opt out of React Compiler
+  // memoization so column visibility toggles re-render the checklist.
+  'use no memo';
   const columns = React.useMemo(
     () =>
       table

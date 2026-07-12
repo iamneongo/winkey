@@ -25,6 +25,9 @@ import * as React from 'react';
 const columnIds = columns.map((c) => c.id).filter(Boolean) as string[];
 
 export function ProductTable() {
+  // TanStack Table returns a referentially stable instance; React Compiler
+  // memoization would freeze the column-visibility checklist and stale the UI.
+  'use no memo';
   const [params, setParams] = useQueryStates({
     page: parseAsInteger.withDefault(1),
     perPage: parseAsInteger.withDefault(10),

@@ -146,10 +146,14 @@ export function FileUploader(props: FileUploaderProps) {
             setFiles([]);
             return `${target} uploaded`;
           },
-          error: (error) =>
-            error instanceof Error && error.message
+          error: (error) => {
+            // Clear the failed files so the dropzone unlocks (maxFiles reached +
+            // stuck progress would otherwise block removing/re-selecting a file).
+            setFiles([]);
+            return error instanceof Error && error.message
               ? error.message
-              : `Failed to upload ${target}`
+              : `Failed to upload ${target}`;
+          }
         });
       }
     },

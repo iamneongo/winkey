@@ -19,6 +19,9 @@ interface DataTableProps<TData> extends React.ComponentProps<'div'> {
 }
 
 export function DataTable<TData>({ table, actionBar, children }: DataTableProps<TData>) {
+  // TanStack Table's `table` instance is referentially stable, so React Compiler
+  // memoization would freeze this JSX and rows would never update.
+  'use no memo';
   return (
     <div className='flex flex-1 flex-col space-y-4'>
       {children}

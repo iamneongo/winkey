@@ -22,6 +22,9 @@ export function DataTableToolbar<TData>({
   className,
   ...props
 }: DataTableToolbarProps<TData>) {
+  // TanStack Table instance is referentially stable — opt out of React Compiler
+  // memoization so filter state stays live.
+  'use no memo';
   const isFiltered = table.getState().columnFilters.length > 0;
 
   const columns = React.useMemo(
@@ -69,6 +72,7 @@ interface DataTableToolbarFilterProps<TData> {
 }
 
 function DataTableToolbarFilter<TData>({ column }: DataTableToolbarFilterProps<TData>) {
+  'use no memo';
   {
     const columnMeta = column.columnDef.meta;
 

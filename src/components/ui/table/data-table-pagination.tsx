@@ -23,6 +23,9 @@ export function DataTablePagination<TData>({
   className,
   ...props
 }: DataTablePaginationProps<TData>) {
+  // TanStack Table instance is referentially stable — opt out of React Compiler
+  // memoization so pagination state stays live.
+  'use no memo';
   return (
     <div
       className={cn(
