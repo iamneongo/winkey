@@ -11,6 +11,8 @@ export default async function StorePage({
 }) {
   const params = await searchParams;
   const { activeCategory, label } = resolveCategoryParam(params.category);
+  const rawSearch = Array.isArray(params.search) ? params.search[0] : params.search;
+  const initialSearch = rawSearch?.trim() ?? '';
 
   const allProducts = await getStorefrontProducts();
   const products = activeCategory
@@ -22,7 +24,13 @@ export default async function StorePage({
       {products.length === 0 ? (
         <EmptyProductsState />
       ) : (
-        <StorePageClient products={products} categoryLabel={label} />
+        <StorePageClient
+          // Remount when URL params change so the client search state follows the URL.
+          key={`${activeCategory ?? 'all'}::${initialSearch}`}
+          products={products}
+          categoryLabel={label}
+          initialSearch={initialSearch}
+        />
       )}
     </MarketplaceShell>
   );

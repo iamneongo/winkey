@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { ensureDatabaseReady } from '@/lib/catalog';
 import { orderCreateSchema } from '@/lib/api-schemas';
@@ -6,6 +7,39 @@ import { createNotification } from '@/lib/notifications';
 import { sendOrderConfirmation } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
+
+/** Recent orders of the signed-in customer (used by the header notification bell). */
+export async function GET() {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { rows } = await db.query<{ id: number }>(
+      'SELECT id FROM customers WHERE clerk_id = $1',
+      [userId]
+    );
+    const customerId = rows[0]?.id;
+    if (!customerId) {
+      return NextResponse.json({ success: true, orders: [] });
+    }
+
+    const { rows: orders } = await db.query(
+      `SELECT id, payment_status, total_amount, created_at
+       FROM orders
+       WHERE customer_id = $1
+       ORDER BY created_at DESC
+       LIMIT 5`,
+      [customerId]
+    );
+
+    return NextResponse.json({ success: true, orders });
+  } catch (error: unknown) {
+    console.error('Get my orders error:', error);
+    return NextResponse.json({ success: false, error: 'Internal error' }, { status: 500 });
+  }
+}
 
 export async function POST(req: Request) {
   try {

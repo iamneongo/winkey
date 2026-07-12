@@ -8,12 +8,14 @@ import type { Product } from '../../context/CartContext';
 
 export function StorePageClient({
   products,
-  categoryLabel
+  categoryLabel,
+  initialSearch = ''
 }: {
   products: Product[];
   categoryLabel: string | null;
+  initialSearch?: string;
 }) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
 
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();

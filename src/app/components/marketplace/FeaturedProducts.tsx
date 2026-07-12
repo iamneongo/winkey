@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Product } from "../../context/CartContext";
@@ -13,6 +13,21 @@ interface FeaturedProductsProps {
 export function FeaturedProducts({ products }: FeaturedProductsProps) {
   const [activeTab, setActiveTab] = useState("Bán chạy");
   const tabs = ["Bán chạy", "Mới nhất", "Được đánh giá cao"];
+
+  const visibleProducts = useMemo(() => {
+    const list = [...products];
+    if (activeTab === "Bán chạy") {
+      // Most purchased ≈ most reviewed
+      list.sort((a, b) => (b.reviewsCount ?? 0) - (a.reviewsCount ?? 0));
+    } else if (activeTab === "Được đánh giá cao") {
+      list.sort(
+        (a, b) => (b.rating ?? 0) - (a.rating ?? 0) || (b.reviewsCount ?? 0) - (a.reviewsCount ?? 0)
+      );
+    }
+    // "Mới nhất": keep API order (products come sorted by updated_at DESC)
+    return list.slice(0, 4);
+  }, [products, activeTab]);
+
   return (
     <div className="mb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
@@ -56,8 +71,9 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
          ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {products.slice(0, 4).map((product) => (
+      {/* 4 columns only on wide desktop (2xl); at lg/xl the side panels squeeze the middle column */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 gap-4">
+        {visibleProducts.map((product) => (
           <ProductCard key={product.id} product={product} variant="compact" />
         ))}
       </div>

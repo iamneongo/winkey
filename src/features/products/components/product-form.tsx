@@ -134,14 +134,22 @@ export default function ProductForm({
     const body = new FormData();
     body.append('file', file);
 
-    const response = await fetch('/api/uploads/product-image', {
-      method: 'POST',
-      body
-    });
-
-    const result = await readUploadResponse(response);
+    let response: Response;
+    let result: UploadResponse;
+    try {
+      response = await fetch('/api/uploads/product-image', {
+        method: 'POST',
+        body
+      });
+      result = await readUploadResponse(response);
+    } catch (error) {
+      // Reset progress so the file row isn't stuck in a "loading" state after failure.
+      setUploadProgress({});
+      throw error;
+    }
 
     if (!response.ok || !result.success || !result.url) {
+      setUploadProgress({});
       throw new Error(result.message || 'Upload thất bại');
     }
 

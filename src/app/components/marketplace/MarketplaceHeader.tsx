@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React, { useState, useEffect, Suspense } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, ShoppingCart, Bell, User, Menu } from "lucide-react";
 import { useCart } from "../../context/CartContext";
 import { useUser, useClerk } from "@clerk/nextjs";
@@ -173,6 +173,88 @@ function UserMenu() {
   );
 }
 
+type OrderNotification = {
+  id: number;
+  payment_status: string;
+  total_amount: string | number;
+  created_at: string;
+};
+
+function orderStatusLabel(status: string) {
+  if (status === "paid") return "Đã thanh toán";
+  if (status === "failed") return "Thất bại";
+  return "Đang xử lý";
+}
+
+function NotificationBell() {
+  const { isSignedIn, isLoaded } = useUser();
+  const [orders, setOrders] = useState<OrderNotification[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const loadOrders = async () => {
+    if (!isSignedIn || loading) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/orders");
+      const data = await res.json().catch(() => ({}));
+      setOrders(res.ok && Array.isArray(data.orders) ? data.orders : []);
+    } catch {
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <DropdownMenu onOpenChange={(open) => open && loadOrders()}>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="relative hidden md:flex items-center justify-center w-11 h-11 text-gray-700 hover:text-blue-600 transition-colors"
+          aria-label="Thông báo"
+        >
+          <Bell className="w-[22px] h-[22px]" strokeWidth={2.5} />
+          <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-72 mt-2 rounded-xl">
+        <DropdownMenuLabel>Thông báo</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {!isLoaded ? (
+          <div className="px-3 py-4 text-sm text-gray-500">Đang tải...</div>
+        ) : !isSignedIn ? (
+          <div className="px-3 py-4 text-center">
+            <p className="mb-3 text-sm text-gray-600">Đăng nhập để xem thông báo đơn hàng của bạn.</p>
+            <Link
+              href="/auth/sign-in"
+              className="inline-flex rounded-full bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Đăng nhập
+            </Link>
+          </div>
+        ) : loading && orders === null ? (
+          <div className="px-3 py-4 text-sm text-gray-500">Đang tải thông báo...</div>
+        ) : !orders || orders.length === 0 ? (
+          <div className="px-3 py-4 text-sm text-gray-500">Bạn chưa có thông báo nào.</div>
+        ) : (
+          orders.map((order) => (
+            <DropdownMenuItem key={order.id} asChild className="rounded-lg cursor-pointer">
+              <Link href={`/tai-khoan/don-hang/${order.id}`} className="flex flex-col items-start gap-0.5">
+                <span className="text-sm font-semibold">
+                  Đơn hàng #{order.id} — {orderStatusLabel(order.payment_status)}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {new Date(order.created_at).toLocaleDateString("vi-VN")} ·{" "}
+                  {Number(order.total_amount).toLocaleString("vi-VN")} ₫
+                </span>
+              </Link>
+            </DropdownMenuItem>
+          ))
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function MobileMenuLinks({ onNavigate }: { onNavigate: () => void }) {
   const pathname = usePathname();
   const { isSignedIn, isLoaded } = useUser();
@@ -206,13 +288,22 @@ function MobileMenuLinks({ onNavigate }: { onNavigate: () => void }) {
 
 export function MarketplaceHeader() {
   const { cartCount, setIsCartOpen } = useCart();
+  const router = useRouter();
   const [searchFocused, setSearchFocused] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const handleSearchSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const keyword = searchTerm.trim();
+    if (!keyword) return;
+    router.push(`/cua-hang?search=${encodeURIComponent(keyword)}`);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm">
@@ -232,17 +323,25 @@ export function MarketplaceHeader() {
         </Link>
 
         {/* Search Bar (desktop only, from xl to avoid crowding navigation at lg) */}
-        <div className={`hidden xl:flex flex-1 max-w-md items-center bg-gray-50 rounded-full px-4 py-2 border transition-all ${searchFocused ? 'border-blue-300 ring-2 ring-blue-100 bg-white' : 'border-transparent'}`}>
-          <Search className="w-4 h-4 text-gray-400 mr-2" />
+        <form
+          onSubmit={handleSearchSubmit}
+          role="search"
+          className={`hidden xl:flex flex-1 max-w-md items-center bg-gray-50 rounded-full px-4 py-2 border transition-all ${searchFocused ? 'border-blue-300 ring-2 ring-blue-100 bg-white' : 'border-transparent'}`}
+        >
+          <button type="submit" aria-label="Tìm kiếm" className="mr-2 flex items-center text-gray-400 hover:text-blue-600">
+            <Search className="w-4 h-4" />
+          </button>
           <input
             type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Tìm kiếm sản phẩm, dịch vụ..."
             aria-label="Tìm kiếm sản phẩm, dịch vụ"
             className="bg-transparent border-none outline-none w-full text-sm text-gray-700 placeholder:text-gray-400"
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
           />
-        </div>
+        </form>
 
         {/* Desktop Navigation */}
         <Suspense fallback={<NavLinks pathname="" currentTitle={null} />}>
@@ -264,13 +363,7 @@ export function MarketplaceHeader() {
             )}
           </button>
 
-          <button
-            className="relative hidden md:flex items-center justify-center w-11 h-11 text-gray-700 hover:text-blue-600 transition-colors"
-            aria-label="Thông báo"
-          >
-            <Bell className="w-[22px] h-[22px]" strokeWidth={2.5} />
-            <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
+          <NotificationBell />
 
           <UserMenu />
 
@@ -294,15 +387,26 @@ export function MarketplaceHeader() {
               </SheetHeader>
               <div className="flex flex-col px-5 pb-6">
                 {/* Search inside the drawer (header search is desktop-only) */}
-                <div className="flex items-center bg-gray-50 rounded-full px-4 py-2.5 border border-transparent focus-within:border-blue-300 focus-within:bg-white mb-4">
-                  <Search className="w-4 h-4 text-gray-400 mr-2" />
+                <form
+                  onSubmit={(event) => {
+                    handleSearchSubmit(event);
+                    setMobileOpen(false);
+                  }}
+                  role="search"
+                  className="flex items-center bg-gray-50 rounded-full px-4 py-2.5 border border-transparent focus-within:border-blue-300 focus-within:bg-white mb-4"
+                >
+                  <button type="submit" aria-label="Tìm kiếm" className="mr-2 flex items-center text-gray-400 hover:text-blue-600">
+                    <Search className="w-4 h-4" />
+                  </button>
                   <input
                     type="text"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
                     placeholder="Tìm kiếm sản phẩm, dịch vụ..."
                     aria-label="Tìm kiếm sản phẩm, dịch vụ"
                     className="bg-transparent border-none outline-none w-full text-sm text-gray-700 placeholder:text-gray-400"
                   />
-                </div>
+                </form>
                 <MobileMenuLinks onNavigate={() => setMobileOpen(false)} />
               </div>
             </SheetContent>

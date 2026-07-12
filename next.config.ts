@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'img.clerk.com'
+      },
+      {
+        // Vercel Blob store (admin product/blog image uploads)
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com'
       }
     ]
   },
