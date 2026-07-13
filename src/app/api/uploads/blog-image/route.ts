@@ -87,6 +87,21 @@ export async function POST(request: Request) {
 
     // if no BLOB_READ_WRITE_TOKEN, mock the upload
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      // The local fallback writes to public/uploads, which only works in local dev.
+      // On Vercel the serverless filesystem is read-only and runtime files in
+      // public/ are never served, so fail fast with an actionable message.
+      if (process.env.VERCEL) {
+        console.error('Upload failed: BLOB_READ_WRITE_TOKEN is not configured on this deployment.');
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              'Máy chủ chưa cấu hình kho lưu trữ ảnh (thiếu BLOB_READ_WRITE_TOKEN). Hãy kết nối Vercel Blob Store cho project rồi deploy lại.'
+          },
+          { status: 500 }
+        );
+      }
+
       console.warn('BLOB_READ_WRITE_TOKEN missing. Using local mock for blog image.');
       const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'blogs');
       await mkdir(uploadDir, { recursive: true });
