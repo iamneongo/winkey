@@ -19,7 +19,8 @@ import { Label } from '@/components/ui/label';
 
 const RichTextEditor = dynamic(() => import('@/components/rich-text-editor').then(mod => mod.RichTextEditor), { ssr: false });
 
-const MANAGED_UPLOAD_PREFIX = '/uploads/products/';
+// Database-backed uploads (current) and legacy filesystem uploads (old dev era)
+const MANAGED_UPLOAD_PREFIXES = ['/api/uploads/images/', '/uploads/products/'];
 
 type UploadResponse = {
   success: boolean;
@@ -42,7 +43,7 @@ async function readUploadResponse(response: Response): Promise<UploadResponse> {
 }
 
 function isManagedUploadUrl(url?: string) {
-  return Boolean(url?.startsWith(MANAGED_UPLOAD_PREFIX));
+  return Boolean(url && MANAGED_UPLOAD_PREFIXES.some((prefix) => url.startsWith(prefix)));
 }
 
 export default function ProductForm({

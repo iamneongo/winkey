@@ -1,10 +1,13 @@
-import { randomUUID } from 'node:crypto';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { NextResponse } from 'next/server';
 import { managedUploadDeleteSchema } from '@/lib/api-schemas';
 import { requireAdmin } from '@/lib/api-auth';
-import { put } from '@vercel/blob';
+import {
+  deleteUploadedImage,
+  parseUploadedImageUrl,
+  saveUploadedImage
+} from '@/lib/uploaded-images';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,26 +21,16 @@ const ALLOWED_TYPES = new Set([
   'image/avif',
   'image/svg+xml'
 ]);
-const UPLOAD_PREFIX = '/uploads/blogs/';
+// Legacy prefix from the old filesystem-based uploads (kept so DELETE still works
+// for images uploaded before the switch to database storage).
+const LEGACY_UPLOAD_PREFIX = '/uploads/blogs/';
 
-function getExtension(file: File) {
-  if (file.type === 'image/jpeg') return '.jpg';
-  if (file.type === 'image/png') return '.png';
-  if (file.type === 'image/webp') return '.webp';
-  if (file.type === 'image/gif') return '.gif';
-  if (file.type === 'image/avif') return '.avif';
-  if (file.type === 'image/svg+xml') return '.svg';
-
-  const ext = path.extname(file.name || '').toLowerCase();
-  return ext || '.png';
-}
-
-function resolveManagedUploadPath(url: string) {
-  if (!url.startsWith(UPLOAD_PREFIX)) {
+function resolveLegacyUploadPath(url: string) {
+  if (!url.startsWith(LEGACY_UPLOAD_PREFIX)) {
     return null;
   }
 
-  const fileName = url.slice(UPLOAD_PREFIX.length);
+  const fileName = url.slice(LEGACY_UPLOAD_PREFIX.length);
   if (!fileName || fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
     return null;
   }
@@ -85,51 +78,20 @@ export async function POST(request: Request) {
       );
     }
 
-    // if no BLOB_READ_WRITE_TOKEN, mock the upload
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      // The local fallback writes to public/uploads, which only works in local dev.
-      // On Vercel the serverless filesystem is read-only and runtime files in
-      // public/ are never served, so fail fast with an actionable message.
-      if (process.env.VERCEL) {
-        console.error('Upload failed: BLOB_READ_WRITE_TOKEN is not configured on this deployment.');
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              'Máy chủ chưa cấu hình kho lưu trữ ảnh (thiếu BLOB_READ_WRITE_TOKEN). Hãy kết nối Vercel Blob Store cho project rồi deploy lại.'
-          },
-          { status: 500 }
-        );
-      }
-
-      console.warn('BLOB_READ_WRITE_TOKEN missing. Using local mock for blog image.');
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'blogs');
-      await mkdir(uploadDir, { recursive: true });
-      const extension = getExtension(file);
-      const filename = `${Date.now()}-${randomUUID()}${extension}`;
-      const filePath = path.join(uploadDir, filename);
-      const buffer = Buffer.from(await file.arrayBuffer());
-      await writeFile(filePath, buffer);
-
-      return NextResponse.json({
-        success: true,
-        message: 'Đã upload ảnh blog (local fallback).',
-        url: `${UPLOAD_PREFIX}${filename}`
-      });
-    }
-
-    const extension = getExtension(file);
-    const filename = `${Date.now()}-${randomUUID()}${extension}`;
-    
-    const blob = await put(`blogs/${filename}`, file, {
-      access: 'public',
-      addRandomSuffix: false
+    // Store image bytes in Postgres (Neon) — works identically in local dev and
+    // on Vercel (whose serverless filesystem is read-only).
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const url = await saveUploadedImage({
+      folder: 'blogs',
+      filename: file.name ?? '',
+      mimeType: file.type,
+      data: buffer
     });
 
     return NextResponse.json({
       success: true,
       message: 'Đã upload ảnh blog.',
-      url: blob.url
+      url
     });
   } catch (error) {
     console.error('Blog image upload failed:', error);
@@ -155,7 +117,15 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const filePath = resolveManagedUploadPath(parsed.data.url);
+    // New database-backed uploads
+    const imageId = parseUploadedImageUrl(parsed.data.url);
+    if (imageId) {
+      await deleteUploadedImage(imageId);
+      return NextResponse.json({ success: true, message: 'Đã xóa ảnh blog.' });
+    }
+
+    // Legacy filesystem uploads (local dev era)
+    const filePath = resolveLegacyUploadPath(parsed.data.url);
     if (!filePath) {
       return NextResponse.json(
         { success: false, message: 'Chỉ có thể xóa ảnh đã upload từ admin.' },
