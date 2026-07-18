@@ -17,7 +17,7 @@ export default async function AdminOrdersPage(props: {
   const searchParams = await props.searchParams;
   const page = parseInt(searchParams.page || '1', 10);
   const q = searchParams.q || '';
-  const status = searchParams.status === 'all' ? undefined : (searchParams.status as 'pending' | 'paid' | 'failed' | undefined);
+  const status = searchParams.status === 'all' ? undefined : (searchParams.status as 'pending' | 'paid' | 'failed' | 'cancelled' | undefined);
 
   const { orders, total, totalPages } = await getOrdersPaginated({
     page,
@@ -45,6 +45,7 @@ export default async function AdminOrdersPage(props: {
                 <SelectItem value="pending">Chờ thanh toán</SelectItem>
                 <SelectItem value="paid">Đã thanh toán</SelectItem>
                 <SelectItem value="failed">Thất bại</SelectItem>
+                <SelectItem value="cancelled">Đã hủy thanh toán</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -83,7 +84,7 @@ export default async function AdminOrdersPage(props: {
                     <TableCell>{new Date(order.created_at).toLocaleDateString('vi-VN')}</TableCell>
                     <TableCell className="font-semibold">{formatCurrency(Number(order.total_amount))}</TableCell>
                     <TableCell>
-                      <Badge variant={order.payment_status === 'paid' ? 'default' : order.payment_status === 'failed' ? 'destructive' : 'secondary'}>
+                      <Badge variant={order.payment_status === 'paid' ? 'default' : order.payment_status === 'failed' ? 'destructive' : order.payment_status === 'cancelled' ? 'outline' : 'secondary'}>
                         {order.payment_status}
                       </Badge>
                     </TableCell>

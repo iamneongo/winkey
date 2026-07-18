@@ -14,6 +14,7 @@ function getIcon(type: string) {
     case 'new_order': return <ShoppingCart className="w-5 h-5 text-blue-500" />;
     case 'order_paid': return <CheckCircle className="w-5 h-5 text-blue-500" />;
     case 'order_failed': return <XCircle className="w-5 h-5 text-red-500" />;
+    case 'order_cancelled': return <XCircle className="w-5 h-5 text-orange-500" />;
     case 'new_affiliate': return <UserPlus className="w-5 h-5 text-purple-500" />;
     case 'low_key_stock': return <AlertTriangle className="w-5 h-5 text-orange-500" />;
     case 'payout_request': return <Banknote className="w-5 h-5 text-emerald-500" />;

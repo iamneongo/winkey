@@ -130,13 +130,20 @@ export const CartDrawer: React.FC = () => {
     setCustomerForm(initialCustomerForm);
   }
 
-  // Starting a new shopping session (empty -> non-empty) after a finished checkout
-  // returns the drawer to the cart view instead of the stale result screen.
+  // Starting a new shopping session (empty -> non-empty) must never reuse anything
+  // from a previous checkout: no stale step/result screen, and above all no stale
+  // orderId/qrData — otherwise "Thanh toán ngay" would resume the OLD order's
+  // payment instead of creating a new order for the new cart.
   const [seenCartLen, setSeenCartLen] = useState(cart.length);
   if (cart.length !== seenCartLen) {
     const wasEmpty = seenCartLen === 0;
     setSeenCartLen(cart.length);
-    if (wasEmpty && cart.length > 0 && (step === "success" || step === "invoice-error")) {
+    if (wasEmpty && cart.length > 0 && (orderId != null || step !== "cart")) {
+      // After a completed purchase the next order starts completely fresh,
+      // including the customer form.
+      if (step === "success") {
+        setCustomerForm(initialCustomerForm);
+      }
       setStep("cart");
       setOrderId(null);
       setQrData(null);
@@ -336,12 +343,25 @@ export const CartDrawer: React.FC = () => {
                 toast.success(`Đơn hàng #${qrData.orderId} đã được thanh toán thành công!`);
               }}
               onTimeout={() => {
+                const timedOutOrderId = qrData.orderId;
+                // Drop the expired payment session so the next checkout starts a NEW order.
                 setStep('cart');
+                setOrderId(null);
+                setQrData(null);
                 toast('Đã hết thời gian thanh toán', {
-                  description: `Đơn hàng #${qrData.orderId} vẫn được lưu lại, bạn có thể kiểm tra trong Tài khoản.`,
+                  description: `Đơn hàng #${timedOutOrderId} vẫn được lưu lại, bạn có thể kiểm tra trong Tài khoản.`,
                 });
               }}
-              onCancel={() => setStep('cart')}
+              onCancel={() => {
+                const cancelledOrderId = qrData.orderId;
+                // The cancelled payment session must never be reused for the next cart.
+                setStep('cart');
+                setOrderId(null);
+                setQrData(null);
+                toast('Đã hủy thanh toán', {
+                  description: `Đơn hàng #${cancelledOrderId} đã được đánh dấu hủy thanh toán.`,
+                });
+              }}
             />
           ) : step === 'success' ? (
             <div className="flex flex-col items-center justify-center p-8 text-center space-y-4" role="status" aria-live="polite">

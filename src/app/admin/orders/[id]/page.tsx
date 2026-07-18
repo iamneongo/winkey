@@ -49,7 +49,7 @@ export default async function AdminOrderDetailPage(props: {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle>Sản phẩm đã đặt</CardTitle>
-              <Badge variant={order.payment_status === 'paid' ? 'default' : order.payment_status === 'failed' ? 'destructive' : 'secondary'}>
+              <Badge variant={order.payment_status === 'paid' ? 'default' : order.payment_status === 'failed' ? 'destructive' : order.payment_status === 'cancelled' ? 'outline' : 'secondary'}>
                 {order.payment_status}
               </Badge>
             </CardHeader>

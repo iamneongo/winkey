@@ -59,8 +59,25 @@ export default async function CustomerOrderDetail(props: {
             Đặt lúc {new Date(order.created_at).toLocaleString('vi-VN')}
           </p>
         </div>
-        <Badge variant={isPaid ? 'default' : (order.payment_status === 'failed' ? 'destructive' : 'secondary')} className="w-fit shrink-0 text-sm px-3 py-1">
-          {isPaid ? 'Đã thanh toán' : (order.payment_status === 'failed' ? 'Thất bại' : 'Đang xử lý')}
+        <Badge
+          variant={
+            isPaid
+              ? 'default'
+              : order.payment_status === 'failed'
+                ? 'destructive'
+                : order.payment_status === 'cancelled'
+                  ? 'outline'
+                  : 'secondary'
+          }
+          className="w-fit shrink-0 text-sm px-3 py-1"
+        >
+          {isPaid
+            ? 'Đã thanh toán'
+            : order.payment_status === 'failed'
+              ? 'Thất bại'
+              : order.payment_status === 'cancelled'
+                ? 'Đã hủy thanh toán'
+                : 'Đang xử lý'}
         </Badge>
       </div>
 
