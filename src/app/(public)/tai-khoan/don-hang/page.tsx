@@ -33,9 +33,13 @@ function summariseItems(items: RawOrder['items']): string {
   return 'Sản phẩm';
 }
 
-function statusMeta(status: string): { label: string; variant: 'default' | 'destructive' | 'secondary' } {
+function statusMeta(status: string): {
+  label: string;
+  variant: 'default' | 'destructive' | 'secondary' | 'outline';
+} {
   if (status === 'paid') return { label: 'Đã thanh toán', variant: 'default' };
   if (status === 'failed') return { label: 'Thất bại', variant: 'destructive' };
+  if (status === 'cancelled') return { label: 'Đã hủy thanh toán', variant: 'outline' };
   return { label: 'Đang xử lý', variant: 'secondary' };
 }
 

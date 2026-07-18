@@ -183,6 +183,7 @@ type OrderNotification = {
 function orderStatusLabel(status: string) {
   if (status === "paid") return "Đã thanh toán";
   if (status === "failed") return "Thất bại";
+  if (status === "cancelled") return "Đã hủy thanh toán";
   return "Đang xử lý";
 }
 

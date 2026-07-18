@@ -63,8 +63,24 @@ export function QRPaymentScreen({
     return () => clearInterval(interval);
   }, [orderId, onSuccess]);
 
-  const handleCancel = () => {
-    if (confirm('Bạn có chắc chắn muốn hủy thanh toán này không? Đơn hàng vẫn được lưu lại.')) {
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    if (!confirm('Bạn có chắc chắn muốn hủy thanh toán này không? Đơn hàng vẫn được lưu lại.')) {
+      return;
+    }
+
+    // Stop polling first so a race can't flip the screen to "success" mid-cancel.
+    isPollingRef.current = false;
+    setIsCancelling(true);
+    try {
+      // Mark the payment as cancelled server-side so admin sees the right status.
+      await fetch(`/api/orders/${orderId}/cancel-payment`, { method: 'POST' });
+    } catch (error) {
+      // The user still leaves the QR screen; the order simply stays pending.
+      console.error('Cancel payment request failed:', error);
+    } finally {
+      setIsCancelling(false);
       onCancel();
     }
   };
@@ -102,8 +118,14 @@ export function QRPaymentScreen({
         <Progress value={progressPercent} className="h-2" />
       </div>
 
-      <Button variant="outline" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleCancel}>
-        Hủy thanh toán
+      <Button
+        variant="outline"
+        className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+        onClick={handleCancel}
+        disabled={isCancelling}
+        aria-busy={isCancelling}
+      >
+        {isCancelling ? 'Đang hủy...' : 'Hủy thanh toán'}
       </Button>
     </div>
   );

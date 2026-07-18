@@ -49,6 +49,7 @@ export function StatusSelect({ orderId, currentStatus }: StatusSelectProps) {
         <SelectItem value="pending">Chờ thanh toán</SelectItem>
         <SelectItem value="paid">Đã thanh toán</SelectItem>
         <SelectItem value="failed">Thất bại</SelectItem>
+        <SelectItem value="cancelled">Đã hủy thanh toán</SelectItem>
       </SelectContent>
     </Select>
   );

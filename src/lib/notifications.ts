@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { ensureDatabaseReady } from '@/lib/catalog';
 
-type NotificationType = 'new_order' | 'order_paid' | 'order_failed' | 'new_affiliate' | 'low_key_stock' | 'payout_request';
+type NotificationType = 'new_order' | 'order_paid' | 'order_failed' | 'order_cancelled' | 'new_affiliate' | 'low_key_stock' | 'payout_request';
 
 export async function createNotification(data: {
   type: NotificationType;
